@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.9] - 2026-02-06
+
+### Changed
+- Removed spark context logging
+
+---
+
 ## [0.1.8] - 2026-02-05
 
 ### Changed
