@@ -21,8 +21,10 @@ class LoggingConfig:
             config["DEFAULT"]["log_base_path"],
             config["DEFAULT"]["log_directory_name"],
         )
+        temp = config["DEFAULT"]["temp_directory"]
+        temp = temp.replace("/dbfs", "")
         self.temp_log_dir = os.path.join(
-            config["DEFAULT"]["temp_directory"],
+            temp,
             config["DEFAULT"]["log_directory_name"],
         )
 
