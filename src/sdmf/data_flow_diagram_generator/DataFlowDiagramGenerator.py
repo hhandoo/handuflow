@@ -5,6 +5,8 @@ import configparser
 from collections import defaultdict
 
 # external
+import matplotlib
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, FancyArrow
 import pandas as pd
@@ -27,6 +29,8 @@ class DataFlowDiagramGenerator():
         self.lineage_bounds = []
         self.roots = None
         self.lineage_id = 1
+        matplotlib.use("Agg")
+
 
     def run(self):
         if len(self.validated_dataframe) != 0:
@@ -163,3 +167,4 @@ class DataFlowDiagramGenerator():
         self.ax.autoscale_view()
         path = os.path.join(self.config['DEFAULT']['file_hunt_path'], self.config['DEFAULT']['outbound_directory_name'], f'feed_lineage_{self.run_id}.png')
         plt.savefig(path)
+        plt.close()
