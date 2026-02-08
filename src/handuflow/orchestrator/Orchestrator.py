@@ -75,7 +75,7 @@ class Orchestrator:
             self.logger.info("==FINAL LOG==")
             self.my_LoggingConfig.move_logs_to_final_location()
             self.logger.info("System has finished processing data.")
-            self.logger.info("Thanks for using SDMF.")
+            self.logger.info("Thanks for using handuflow.")
         else:
             self.logger.error("System is not ready, feeds will not be processed.")
 
@@ -97,7 +97,7 @@ class Orchestrator:
     def __validate_and_load(self):
         if self.validated_master_specs_df is None:
             raise SystemError(
-                message="SDMF was not able to find validated specs.",
+                message="handuflow was not able to find validated specs.",
                 details=None,
                 original_exception=None,
             )
@@ -149,5 +149,5 @@ class Orchestrator:
             my_ResultGenerator.run()
         else:
             self.logger.warning(
-                f"No non-Extraction feeds passed their defined validation. Please check the run report in SDMF outbound directory with run id: [{self.run_id}]"
+                f"No non-Extraction feeds passed their defined validation. Please check the run report in handuflow outbound directory with run id: [{self.run_id}]"
             )
