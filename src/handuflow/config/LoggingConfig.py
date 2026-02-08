@@ -27,7 +27,7 @@ class LoggingConfig:
         )
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.log_file = os.path.join(
-            self.temp_log_dir, f"sdmf_log_{self.run_id}_{timestamp}.log"
+            self.temp_log_dir, f"log_{self.run_id}_{timestamp}.log"
         )
         os.makedirs(self.temp_log_dir, exist_ok=True)
         os.makedirs(self.final_log_dir, exist_ok=True)
