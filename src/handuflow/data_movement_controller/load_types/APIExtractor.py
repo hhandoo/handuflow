@@ -97,9 +97,9 @@ class APIExtractor(BaseLoadStrategy):
         with open(file_path, "wb") as f:
             f.write(parquet_bytes.getbuffer())
         self.logger.info("Parquet loaded in memory at %s", file_path)
-        spark_path = file_path.replace("/dbfs", "dbfs:")
-        self.logger.info("Reading Parquet into Spark from %s", spark_path)
-        return self.spark.read.parquet(spark_path)
+        # spark_path = file_path.replace("/dbfs", "dbfs:")
+        self.logger.info("Reading Parquet into Spark from %s", file_path)
+        return self.spark.read.parquet(file_path)
 
     def __fetch_response(self) -> requests.Response:
         cfg = self.config.feed_specs['ingestion_config']
