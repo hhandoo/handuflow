@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.17] - 2026-02-08
+
+### Changed
+- Changed app name from `sdmf` to `handuflow`
+
+
+---
+
 ## [0.1.16] - 2026-02-08
 
 ### Fixed
