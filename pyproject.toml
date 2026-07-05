@@ -1,0 +1,119 @@
+[build-system]
+requires = [
+    "setuptools>=83",
+    "setuptools-scm>=10",
+    "wheel>=0.45",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "handuflow"
+dynamic = ["version"]
+description = "Short description"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+
+authors = [
+    { name = "Harsh Handoo", email = "handoo.harsh@gmail.com" }
+]
+
+keywords = [
+    "workflow",
+    "automation",
+    "python",
+    "lakehouse",
+    "workflow",
+    "framework",
+    "spark",
+    "SQL",
+    "sql",
+    "data-engineering",
+    "data",
+    "ETL",
+    "ELT",
+    "etl",
+    "elt"
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8"
+]
+
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9",
+]
+
+[project.urls]
+Homepage = "https://github.com/hhandoo/handuflow"
+Repository = "https://github.com/hhandoo/handuflow"
+Documentation = "https://github.com/hhandoo/handuflow/blob/main/documentation/RUN.md"
+Changelog = "https://github.com/hhandoo/handuflow/blob/main/CHANGELOG.md"
+Issues = "https://github.com/hhandoo/handuflow/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+handuflow = ["py.typed"]
+
+[tool.setuptools_scm]
+version_file = "src/handuflow/_version.py"
+root = "."
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "-ra",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+include = ["src"]
+typeCheckingMode = "strict"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

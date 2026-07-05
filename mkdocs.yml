@@ -1,0 +1,13 @@
+site_name: HanduFLOW
+site_description: Framework for Lakehouse Workflows and Orchestration
+site_author: Harsh Handoo
+site_url: https://github.com/hhandoo/handuflow
+
+repo_url: https://github.com/hhandoo/handuflow
+repo_name: hhandoo/handuflow
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
