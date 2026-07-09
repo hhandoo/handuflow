@@ -17,6 +17,7 @@ def test_create_directory_creates_new_directory(
 
     storage.create_directory(path)
 
+
     assert storage.exists(path) is True
     assert storage.is_directory(path) is True
 

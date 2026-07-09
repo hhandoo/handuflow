@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from handuflow.platform.storage.adapters.local import LocalStorageProvider
+from handuflow.platform.storage.providers.local import LocalStorageProvider
 from handuflow.platform.storage.base import StorageProvider
 
 

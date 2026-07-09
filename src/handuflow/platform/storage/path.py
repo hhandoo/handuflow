@@ -1,3 +1,5 @@
+"""Storage path value object for HanduFLOW."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

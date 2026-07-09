@@ -1,7 +1,9 @@
+"""Active storage provider management for HanduFLOW."""
+
 from __future__ import annotations
 
 from .base import StorageProvider
-from .adapters.local import LocalStorageProvider
+from .providers.local import LocalStorageProvider
 
 
 class StorageManager:

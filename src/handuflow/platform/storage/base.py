@@ -1,3 +1,9 @@
+"""Abstract storage contract for HanduFLOW providers.
+
+Defines ``StorageProvider``, the interface implemented by every storage
+backend such as local filesystem, object stores, and lakehouse paths.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -86,6 +92,14 @@ class StorageProvider(ABC):
         **kwargs: Any,
     ) -> Iterable[StoragePath]:
         """Return the contents of a directory."""
+
+    @abstractmethod
+    def read(
+        self,
+        path: StoragePath,
+        **kwargs: Any,
+    ) -> bytes:
+        """Read and return the contents of a file."""
 
     @abstractmethod
     def create_temp_path(

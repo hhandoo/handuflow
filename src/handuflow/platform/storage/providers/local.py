@@ -1,3 +1,5 @@
+"""Local filesystem storage adapter for HanduFLOW."""
+
 from __future__ import annotations
 
 import shutil
@@ -85,6 +87,13 @@ class LocalStorageProvider(StorageProvider):
     ) -> Iterable[StoragePath]:
         for child in Path(spath.uri).iterdir():
             yield StoragePath(str(child))
+
+    def read(
+        self,
+        spath: StoragePath,
+        **kwargs: Any,
+    ) -> bytes:
+        return Path(spath.uri).read_bytes()
 
     def create_temp_path(
         self,
