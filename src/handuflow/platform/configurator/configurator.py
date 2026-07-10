@@ -4,60 +4,71 @@ Reads framework configuration, configures storage and logging, and exposes
 the initialized runtime services for a HanduFLOW application directory.
 """
 
-# System
+from __future__ import annotations
+
+import configparser
+import logging
 import sys
 import uuid
-import logging
-import configparser
 from datetime import datetime
 
-# Internal
-from handuflow.platform.logging import StorageRotatingFileHandler, StorageFileHandler
-from handuflow.platform.storage import StorageManager, StorageProvider, StoragePath
+from handuflow.platform.configurator.dataclasses import ConfigurationContext
+from ..logging import StorageFileHandler, StorageRotatingFileHandler
+from ..storage import StorageManager, StoragePath, StorageProvider
+from ..exceptions import ConfigurationError, ConfigurationErrors, HanduflowError
+from .dataclasses import ConfigurationContext, DefaultConfiguration, LoggingConfiguration
 
-## Exception Handling
-from handuflow.platform.exceptions.domains.configuration import ConfigurationError
-from handuflow.platform.exceptions.base import HanduflowError
-from handuflow.platform.exceptions.errors.configuration import ConfigurationErrors
+CONFIG_FILE_NAME = "config.ini"
+DEFAULT_SECTION = "DEFAULT"
+LOGGING_SECTION = "LOGGING"
+ROTATING_LOG_TYPE = "rotating"
+DEFAULT_LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
 
 class SystemConfigurator:
-    def __init__(self, handu_flow_directory_path: str):
-        self.logger = None
+    """Initialize storage, logging, and configuration for a HanduFLOW directory."""
 
+    def __init__(self, handu_flow_directory_path: str) -> None:
         if not handu_flow_directory_path:
             raise ConfigurationError(
                 ConfigurationErrors.MISSING_HANDUFLOW_DIRECTORY,
                 parameter="handu_flow_directory_path",
             )
 
-        self.my_storage_manager = StorageManager()
-        self.base_directory = StoragePath(handu_flow_directory_path)
-        self.config = configparser.ConfigParser(interpolation=None)
-        self.run_id = str(uuid.uuid4())
+        self._storage_manager = StorageManager()
+        self._base_directory = StoragePath(handu_flow_directory_path)
+        self._config = configparser.ConfigParser(interpolation=None)
+        self._run_id = str(uuid.uuid4())
+        self._context: ConfigurationContext | None = None
 
+    @property
+    def run_id(self) -> str:
+        """Return the unique identifier generated for this configuration run."""
+        return self._run_id
 
-    def set_storage_provider(self, custom_storage_provider: StorageProvider):
-        self.my_storage_manager.set_provider(custom_storage_provider)
+    def set_storage_provider(self, storage_provider: StorageProvider) -> None:
+        """Override the storage provider used to read configuration and write logs."""
+        self._storage_manager.set_provider(storage_provider)
 
+    def configure(self) -> ConfigurationContext | None:
+        """Read configuration, initialize services, and return the runtime context.
 
-    def configure(self) -> None:
+        The context is cached and can be retrieved again via
+        `get_configuration_context`.
+        """
         try:
-            self.read_configuration()
-        except ConfigurationError:
-            raise
+            self._read_configuration()
         except HanduflowError:
             raise
         except (OSError, UnicodeError, configparser.Error) as exc:
             raise ConfigurationError(
                 ConfigurationErrors.READ_CONFIGURATION_ERROR,
-                path=f"{self.base_directory.uri}/config.ini",
+                path=self._config_path.uri,
                 cause=exc,
             ) from exc
 
         try:
-            self.logger = self.configure_logger()
-        except ConfigurationError:
-            raise
+            self._context = self._build_context()
         except HanduflowError:
             raise
         except (KeyError, TypeError, ValueError, OSError, configparser.Error) as exc:
@@ -66,60 +77,120 @@ class SystemConfigurator:
                 cause=exc,
             ) from exc
 
-    def get_configuration_context(self):
-        # print(self.config['LOGGING']['log_format'])
-        #
-        # print(self.config, self.run_id)
-        self.logger.info('test test')
+        return self._context
 
+    def get_configuration_context(self) -> ConfigurationContext:
+        """Return the runtime context produced by `configure`."""
+        if self._context is None:
+            raise ConfigurationError(
+                ConfigurationErrors.UNKNOWN_CONFIGURATION_ERROR,
+                reason="configure() must be called before the configuration context is available",
+            )
+        return self._context
 
+    @property
+    def _config_path(self) -> StoragePath:
+        return StoragePath(f"{self._base_directory.uri}/{CONFIG_FILE_NAME}")
 
-    def configure_logger(self) -> logging.Logger:
-        logging_section = self.config["LOGGING"]
-        log_directory = StoragePath(
-            f"{self.base_directory.uri}/{logging_section['log_directory_name']}"
+    def _read_configuration(self) -> None:
+        raw_config = self._storage_manager.provider.read(self._config_path)
+        self._config.read_string(raw_config.decode())
+
+    def _build_context(self) -> ConfigurationContext:
+        default = DefaultConfiguration(
+            system_name=self._config[DEFAULT_SECTION]["system_name"],
         )
-        storage = self.my_storage_manager.provider
-        log_format = (
-            logging_section.get("log_format")
-            or "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        return ConfigurationContext(
+            run_id=self._run_id,
+            default=default,
+            logging=self._build_logging_configuration(default.system_name),
+            storage_path=self._base_directory,
+            storage_manager=self._storage_manager,
         )
+
+    def _build_logging_configuration(self, system_name: str) -> LoggingConfiguration:
+        section = self._config[LOGGING_SECTION]
+        log_type = section["type"]
+        log_format = section.get("log_format") or DEFAULT_LOG_FORMAT
+        log_directory_name = section["log_directory_name"]
+        log_file_name = section["log_file_name"]
+        max_bytes = section.getint("max_bytes", fallback=0)
+        backup_count = section.getint("backup_count", fallback=0)
+        default_log_level = int(section["default_log_level"])
+        log_retention_days = section.getint("log_retention_days", fallback=0)
+
+
+        log_directory = StoragePath(f"{self._base_directory.uri}/{log_directory_name}")
+        file_handler = self._create_file_handler(
+            log_type=log_type,
+            log_directory=log_directory,
+            log_file_name=log_file_name,
+            max_bytes=max_bytes,
+            backup_count=backup_count,
+            log_retention_days=log_retention_days,
+        )
+        logger = self._create_logger(
+            name=system_name,
+            level=default_log_level,
+            log_format=log_format,
+            file_handler=file_handler,
+        )
+
+        return LoggingConfiguration(
+            type=log_type,
+            log_format=log_format,
+            log_directory_name=log_directory_name,
+            log_file_name=log_file_name,
+            backup_count=backup_count,
+            max_bytes=max_bytes,
+            default_log_level=default_log_level,
+            log_retention_days=log_retention_days,
+            logger=logger,
+        )
+
+    def _create_file_handler(
+        self,
+        *,
+        log_type: str,
+        log_directory: StoragePath,
+        log_file_name: str,
+        max_bytes: int,
+        backup_count: int,
+        log_retention_days: int,
+    ) -> logging.Handler:
+        storage = self._storage_manager.provider
+
+        if log_type == ROTATING_LOG_TYPE:
+            log_path = StoragePath(f"{log_directory.uri}/{log_file_name}.log")
+            return StorageRotatingFileHandler(log_path, storage, max_bytes, backup_count)
+
+        return StorageFileHandler(
+            log_directory,
+            log_file_name,
+            self._run_id,
+            storage,
+            log_retention_days=log_retention_days,
+            run_date=datetime.now(),
+        )
+
+    @staticmethod
+    def _create_logger(
+        *,
+        name: str,
+        level: int,
+        log_format: str,
+        file_handler: logging.Handler,
+    ) -> logging.Logger:
         formatter = logging.Formatter(log_format)
-
-        if logging_section["type"] == "rotating":
-            log_path = StoragePath(
-                f"{log_directory.uri}/{logging_section['log_file_name']}.log"
-            )
-            file_handler = StorageRotatingFileHandler(
-                log_path,
-                storage,
-                int(logging_section["max_bytes"]),
-                int(logging_section["backup_count"]),
-            )
-        else:
-            file_handler = StorageFileHandler(
-                log_directory,
-                logging_section["log_file_name"],
-                self.run_id,
-                storage,
-                log_retention_days=int(logging_section["log_retention_days"]),
-                run_date=datetime.now(),
-            )
-
         file_handler.setFormatter(formatter)
 
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
 
-        logger = logging.getLogger(self.config["DEFAULT"]["system_name"])
-        logger.setLevel(int(logging_section["default_log_level"]))
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
         logger.handlers.clear()
         logger.propagate = False
         logger.addHandler(file_handler)
         logger.addHandler(console_handler)
         return logger
-
-
-    def read_configuration(self):
-        config_bytes = self.my_storage_manager.provider.read(StoragePath(f"{self.base_directory.uri}/config.ini"))
-        self.config.read_string(config_bytes.decode())
