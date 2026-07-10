@@ -12,7 +12,7 @@ from ..configurator.dataclasses.context import ConfigurationContext
 
 
 class ValidationRunner:
-    """Run registered validations and collect their outcom"""
+    """Run registered validations and collect their outc"""
 
     def __init__(self, validations: list[Validation], configuration_context: ConfigurationContext) -> None:
         self._configuration_context = configuration_context
