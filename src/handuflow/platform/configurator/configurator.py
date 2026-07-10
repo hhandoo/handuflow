@@ -12,11 +12,13 @@ import sys
 import uuid
 from datetime import datetime
 
-from handuflow.platform.configurator.dataclasses import ConfigurationContext
 from ..logging import StorageFileHandler, StorageRotatingFileHandler
 from ..storage import StorageManager, StoragePath, StorageProvider
 from ..exceptions import ConfigurationError, ConfigurationErrors, HanduflowError
-from .dataclasses import ConfigurationContext, DefaultConfiguration, LoggingConfiguration
+from .dataclasses import ConfigurationContext, DefaultConfiguration, LoggingConfiguration, SparkConfiguration
+
+from pyspark.sql import SparkSession
+
 
 CONFIG_FILE_NAME = "config.ini"
 DEFAULT_SECTION = "DEFAULT"
@@ -28,7 +30,7 @@ DEFAULT_LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 class SystemConfigurator:
     """Initialize storage, logging, and configuration for a HanduFLOW directory."""
 
-    def __init__(self, handu_flow_directory_path: str) -> None:
+    def __init__(self, handu_flow_directory_path: str, spark: SparkSession) -> None:
         if not handu_flow_directory_path:
             raise ConfigurationError(
                 ConfigurationErrors.MISSING_HANDUFLOW_DIRECTORY,
@@ -40,6 +42,7 @@ class SystemConfigurator:
         self._config = configparser.ConfigParser(interpolation=None)
         self._run_id = str(uuid.uuid4())
         self._context: ConfigurationContext | None = None
+        self._spark: SparkSession = spark
 
     @property
     def run_id(self) -> str:
@@ -106,6 +109,13 @@ class SystemConfigurator:
             logging=self._build_logging_configuration(default.system_name),
             storage_path=self._base_directory,
             storage_manager=self._storage_manager,
+            spark_config=self._build_spark_configuration()
+        )
+
+
+    def _build_spark_configuration(self):
+        return SparkConfiguration(
+            spark=self._spark
         )
 
     def _build_logging_configuration(self, system_name: str) -> LoggingConfiguration:

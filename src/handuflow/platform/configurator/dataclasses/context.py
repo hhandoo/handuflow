@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
-from handuflow.platform.storage import StorageManager, StoragePath
+from ...storage import StorageManager, StoragePath
 from .logging import LoggingConfiguration
 from .default import DefaultConfiguration
-
+from .spark import SparkConfiguration
 
 @dataclass(frozen=True, slots=True)
 class ConfigurationContext:
@@ -14,3 +14,4 @@ class ConfigurationContext:
     logging: LoggingConfiguration
     storage_path: StoragePath
     storage_manager: StorageManager
+    spark_config: SparkConfiguration

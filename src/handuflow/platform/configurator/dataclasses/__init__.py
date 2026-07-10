@@ -6,9 +6,11 @@ from __future__ import annotations
 from .context import ConfigurationContext
 from .logging import LoggingConfiguration
 from .default import DefaultConfiguration
+from .spark import SparkConfiguration
 
 __all__ = [
     "ConfigurationContext",
     "LoggingConfiguration",
-    "DefaultConfiguration"
+    "DefaultConfiguration",
+    "SparkConfiguration"
 ]
