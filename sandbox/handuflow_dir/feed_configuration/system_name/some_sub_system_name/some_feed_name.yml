@@ -104,4 +104,4 @@ data_quality_checks:
       - some.ds.name
       - some.ds.name
     sql_query: |
-      Some SQL query
+      Some SQL query 2
