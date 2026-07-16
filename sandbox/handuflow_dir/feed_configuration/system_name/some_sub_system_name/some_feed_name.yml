@@ -1,0 +1,107 @@
+feed_meta:
+  unique_identifier: "TEST"
+  upstream_identifier: "TEST1"
+  downstream_identifier: "TEST2"
+  vacuum_hours: 234
+load_details:
+  type: "FULL_LOAD"
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "test"
+  table: "test"
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "test"
+  table: "test1"
+feed_specs:
+  primary_key: "id"
+  composite_key:
+    - "id"
+    - "some_col"
+    - "some_other_col"
+  partition_columns:
+    - "id"
+    - "some_col"
+  optimize_command:
+    enabled: true
+    where:
+      year: 2025
+      month: 7
+    zorder_by:
+      - customer_id
+      - order_date
+  custom_selection:
+    - enabled: true
+    - sql_file: test.sql
+  enforce_schema:
+    type: struct
+    fields:
+      - name: id
+        type: integer
+        nullable: false
+        metadata:
+          primaryKey: true
+      - name: some_col
+        type: string
+        nullable: true
+        metadata:
+          description: Employee ID
+          primaryKey: true
+          sourceColumn: emp_id
+      - name: some_other_col
+        type: double
+        nullable: true
+        metadata: { }
+
+
+data_quality_checks:
+
+  - check_identifier: UNIQUE_ID_1
+    check_type: STANDARD
+    dependency_datasets:
+      - some.ds.name
+      - some.ds.name
+    column: some_column_name
+    checks:
+      - check:
+          name: null
+          range:
+            - from_inc: 10
+            - to_exc: 20
+    threshold: 0.3
+
+
+  - check_identifier: UNIQUE_ID_2
+    check_type: CUSTOM
+    dependency_datasets:
+      - some.ds.name
+      - some.ds.name
+    sql_query: |
+      Some SQL query
+      
+      
+
+  - check_identifier: UNIQUE_ID_4
+    check_type: STANDARD
+    dependency_datasets:
+      - some.ds.name
+      - some.ds.name
+    column: some_column_name
+    checks:
+      - null_check
+      - duplicate_check
+      - range_check:
+          - from_inc: 10
+          - to_exc: 20
+
+
+
+  - check_identifier: UNIQUE_ID_7
+    check_type: CUSTOM
+    dependency_datasets:
+      - some.ds.name
+      - some.ds.name
+    sql_query: |
+      Some SQL query

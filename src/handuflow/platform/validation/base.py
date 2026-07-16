@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from .dataclasses import ValidationResult
+from ..configurator.dataclasses.context import ConfigurationContext
 
 
 class Validation(ABC):
@@ -15,8 +16,13 @@ class Validation(ABC):
     def name(self) -> str:
         """Return the stable identifier for this validation."""
 
+    @property
     @abstractmethod
-    def validate(self) -> ValidationResult:
+    def key(self) -> int:
+        """Return the stable identifier key for this validation."""
+
+    @abstractmethod
+    def validate(self, configuration_context: ConfigurationContext) -> ValidationResult:
         """Execute the validation and return its outcome.
 
         Raises:

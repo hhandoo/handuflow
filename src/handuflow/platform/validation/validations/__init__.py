@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from ..base import Validation
-from .print_validation import PrintValidation
+from .directory_structure_validation import DirectoryStructureValidation
+from .feed_configuration_validation import FeedConfigurationValidation
 
 VALIDATIONS: list[Validation] = [
-    PrintValidation(),
+    DirectoryStructureValidation(),
+    FeedConfigurationValidation(),
 ]
 
 __all__ = [
-    "PrintValidation",
     "VALIDATIONS",
 ]

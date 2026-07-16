@@ -1,11 +1,10 @@
 """Driver for executing HanduFLOW validation rules."""
 
 from __future__ import annotations
-
-from ..exceptions.base import HanduflowError
+from ..validation import Validation
 from ..exceptions.domains.validation import ValidationError
 from ..exceptions.errors.validation import ValidationErrors
-from .base import Validation
+from ..exceptions import HanduflowError
 from .dataclasses import ValidationResult
 from .validations import VALIDATIONS
 from ..configurator.dataclasses.context import ConfigurationContext
@@ -14,26 +13,46 @@ from ..configurator.dataclasses.context import ConfigurationContext
 class ValidationRunner:
     """Run registered validations and collect their outc"""
 
-    def __init__(self, validations: list[Validation], configuration_context: ConfigurationContext) -> None:
+    def __init__(self, configuration_context: ConfigurationContext) -> None:
         self._configuration_context = configuration_context
         self._validations = VALIDATIONS
 
+
+    def add_validation(self, validation: Validation) -> None:
+        self._validations.append(validation)
+
     def run(self, *, raise_on_failure: bool = False) -> list[ValidationResult]:
         """Execute all registered validations."""
+        logger = self._configuration_context.logging.logger
         results: list[ValidationResult] = []
         failures: list[ValidationError] = []
+        total = len(self._validations)
 
-        for validation in self._validations:
+        for index, validation in enumerate(self._validations, start=1):
             try:
-                results.append(validation.validate())
+                result = validation.validate(self._configuration_context)
+                results.append(result)
+                logger.info(
+                    "VALIDATION [%d/%d]: %s : PASSED",
+                    index,
+                    total,
+                    validation.name,
+                )
             except ValidationError as exc:
                 failures.append(exc)
                 results.append(
                     ValidationResult(
+                        validation.key,
                         validation.name,
                         False,
                         exc.message,
                     )
+                )
+                logger.error(
+                    "VALIDATION [%d/%d]: %s : FAILED",
+                    index,
+                    total,
+                    validation.name,
                 )
             except HanduflowError:
                 raise
@@ -46,10 +65,17 @@ class ValidationRunner:
                 failures.append(error)
                 results.append(
                     ValidationResult(
+                        validation.key,
                         validation.name,
                         False,
                         error.message,
                     )
+                )
+                logger.error(
+                    "VALIDATION [%d/%d]: %s : FAILED",
+                    index,
+                    total,
+                    validation.name,
                 )
 
         if raise_on_failure and failures:
