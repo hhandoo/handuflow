@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from ..base import StorageProvider
+from ..base import StorageProvider, StoragePathList
 from ..path import StoragePath
 
 
@@ -87,6 +87,26 @@ class LocalStorageProvider(StorageProvider):
     ) -> Iterable[StoragePath]:
         for child in Path(spath.uri).iterdir():
             yield StoragePath(str(child))
+
+    def read_all_files_by_extension_recursively(
+        self,
+        path: StoragePath,
+        extension: str,
+        **kwargs: Any,
+    ) -> StoragePathList:
+        normalized_extension = extension.lower()
+        if not normalized_extension.startswith("."):
+            normalized_extension = f".{normalized_extension}"
+
+        root = Path(path.uri)
+        if not root.is_dir():
+            return []
+
+        return [
+            StoragePath(str(file_path))
+            for file_path in root.rglob(f"*{normalized_extension}")
+            if file_path.is_file()
+        ]
 
     def read(
         self,

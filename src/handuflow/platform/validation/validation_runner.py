@@ -1,7 +1,7 @@
 """Driver for executing HanduFLOW validation rules."""
 
 from __future__ import annotations
-from ..validation import Validation
+from .base import Validation
 from ..exceptions.domains.validation import ValidationError
 from ..exceptions.errors.validation import ValidationErrors
 from ..exceptions import HanduflowError

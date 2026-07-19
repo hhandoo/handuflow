@@ -1,21 +1,1 @@
-# manager.py
-
-from typing import List
-
-
-class DataQualityManager:
-
-    def __init__(self):
-        self.checks = []
-
-    def add_check(self, check):
-        self.checks.append(check)
-
-    def run(self, context):
-
-        results = []
-
-        for check in self.checks:
-            results.append(check.validate(context))
-
-        return results
+import yamlfrom .dataclass import *from ..platform.configurator.dataclasses.context import ConfigurationContext# from pathlib import PureWindowsPath, PurePosixPathclass DataQualityManager:    def __init__(self, context : ConfigurationContext):        self.context = context        self.list_of_feed_ymls = context.list_of_feed_ymls    def __load_checks(self) -> list:        data_quality_manifest = []        for current_feed in self.list_of_feed_ymls:            with open(current_feed.uri, "r") as f:                config = yaml.safe_load(f)            data_quality_checks = config['data_quality_checks']            parsed_data_quality_checks = []            for dq_check in data_quality_checks:                dq_checks = dq_check['checks']                checklist = []                for mCheck in dq_checks:                    x_from = mCheck.get("from_inc", None)                    x_to = mCheck.get("to_exc", None)                    checklist.append(                        CheckDC(                            name=mCheck['name'],                            check_range=None if x_from is None or x_to is None else range(x_from, x_to),                        )                    )                parsed_data_quality_checks.append(                    CheckObj(                        full_table_path = f"`{config['source']['hive_metastore']}`.`{config['source']['schema']}`.`{config['source']['table']}`",                        table_path=f"`{config['source']['schema']}`.`{config['source']['table']}`",                        check_identifier = dq_check['check_identifier'],                        run_type = dq_check['run_type'],                        check_type = dq_check['check_type'],                        dependency_datasets = dq_check['dependency_datasets'],                        column = dq_check['column'],                        checks = checklist,                        threshold = dq_check.get('threshold', None),                        sql_query = dq_check.get('sql_query', None)                    )                )            data_quality_manifest.append(                {                    "full_file_path": current_feed.uri,                    "feed_identifier": config['feed_meta']['unique_identifier'],                    "parsed_data_quality_checks": parsed_data_quality_checks                }            )        return data_quality_manifest        # print(self._data_quality_manifest)    # @staticmethod    # def __get_filename(path: str) -> str:    #     if "\\" in path:    #         return PureWindowsPath(path).name    #     return PurePosixPath(path).name    def run(self, context):        data_quality_list_parsed = self.__load_checks()        results = []        for checkObj in data_quality_list_parsed:            results.append(checkObj.validate(context))        return results

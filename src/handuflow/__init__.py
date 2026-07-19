@@ -7,6 +7,7 @@ from .platform.exceptions import *
 from .platform.logging import *
 from .platform.validation import *
 from .orchestrator import Orchestrator
+from .data_quality import DataQualityManager
 
 __all__ = [
     "__version__",
@@ -25,5 +26,8 @@ __all__ = [
     "ValidationResult",
     "ValidationRunner",
     "ConfigurationContext",
-    "Orchestrator"
+    "Orchestrator",
+    "DataQualityManager",
+    "DataQualityError",
+    "DataQualityErrors",
 ]

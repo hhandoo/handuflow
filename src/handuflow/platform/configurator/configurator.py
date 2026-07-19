@@ -43,6 +43,7 @@ class SystemConfigurator:
         self._run_id = str(uuid.uuid4())
         self._context: ConfigurationContext | None = None
         self._spark: SparkSession = spark
+        self._list_of_feed_ymls: list[StoragePath] = []
 
     @property
     def run_id(self) -> str:
@@ -95,6 +96,16 @@ class SystemConfigurator:
     def _config_path(self) -> StoragePath:
         return StoragePath(f"{self._base_directory.uri}/{CONFIG_FILE_NAME}")
 
+    def _read_list_of_feed_ymls(self) -> list[StoragePath]:
+        feed_config_path = StoragePath(f"{self._base_directory.uri}/feed_configuration")
+        self._list_of_feed_ymls = (
+            self._storage_manager.provider.read_all_files_by_extension_recursively(
+                feed_config_path,
+                ".yml",
+            )
+        )
+        return self._list_of_feed_ymls
+
     def _read_configuration(self) -> None:
         raw_config = self._storage_manager.provider.read(self._config_path)
         self._config.read_string(raw_config.decode())
@@ -109,7 +120,8 @@ class SystemConfigurator:
             logging=self._build_logging_configuration(default.system_name),
             storage_path=self._base_directory,
             storage_manager=self._storage_manager,
-            spark_config=self._build_spark_configuration()
+            spark_config=self._build_spark_configuration(),
+            list_of_feed_ymls=self._read_list_of_feed_ymls()
         )
 
 

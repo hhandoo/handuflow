@@ -12,6 +12,8 @@ from typing import Any, IO
 
 from .path import StoragePath
 
+StoragePathList = list[StoragePath]
+
 
 class StorageProvider(ABC):
     """
@@ -92,6 +94,15 @@ class StorageProvider(ABC):
         **kwargs: Any,
     ) -> Iterable[StoragePath]:
         """Return the contents of a directory."""
+
+    @abstractmethod
+    def read_all_files_by_extension_recursively(
+        self,
+        path: StoragePath,
+        extension: str,
+        **kwargs: Any,
+    ) -> StoragePathList:
+        """Return all files matching ``extension`` under ``path``, recursively."""
 
     @abstractmethod
     def read(

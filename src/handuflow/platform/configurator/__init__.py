@@ -3,8 +3,8 @@
 Wires storage, logging, and configuration together for application startup.
 """
 from __future__ import annotations
+from .dataclasses import ConfigurationContext
 from .configurator import SystemConfigurator
-from .configurator import ConfigurationContext
 
 __all__ = [
     "SystemConfigurator",

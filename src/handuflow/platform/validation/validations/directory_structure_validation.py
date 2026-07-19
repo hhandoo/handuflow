@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 from ...configurator.dataclasses.context import ConfigurationContext
@@ -15,6 +16,7 @@ from ..dataclasses import ValidationResult
 FEED_CONFIGURATION_DIR = "feed_configuration"
 FEED_LOOKUP_FILE = "__feed_lookup"
 YML_SUFFIX = ".yml"
+SNAKE_CASE_DIRECTORY_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
 class DirectoryStructureValidation(Validation):
@@ -38,20 +40,20 @@ class DirectoryStructureValidation(Validation):
 
         ignored_directories = {configuration_context.logging.log_directory_name}
         logger.info(
-            "Checking that all file and directory names are lowercase "
-            "(ignoring directories: %s)",
+            "Checking that directories under HanduFLOW root use lower snake_case "
+            "without special characters (ignoring directories: %s)",
             ", ".join(sorted(ignored_directories)),
         )
-        lowercase_violations = self._validate_lowercase_names(
+        directory_name_violations = self._validate_directory_snake_case_names(
             provider,
             root,
             logger,
             ignored_directories,
         )
-        violations.extend(lowercase_violations)
+        violations.extend(directory_name_violations)
         logger.info(
-            "Lowercase name check completed with %d violation(s)",
-            len(lowercase_violations),
+            "Directory snake_case check completed with %d violation(s)",
+            len(directory_name_violations),
         )
 
         logger.info("Checking feed configuration directory structure")
@@ -81,7 +83,7 @@ class DirectoryStructureValidation(Validation):
             "HanduFLOW directory structure is valid.",
         )
 
-    def _validate_lowercase_names(
+    def _validate_directory_snake_case_names(
         self,
         provider,
         root: StoragePath,
@@ -91,17 +93,21 @@ class DirectoryStructureValidation(Validation):
         violations: list[str] = []
         checked_count = 0
 
-        for entry in self._iter_entries(provider, root, ignored_directories, logger):
+        for directory in self._iter_directories(provider, root, ignored_directories, logger):
             checked_count += 1
-            entry_name = Path(entry.uri).name
-            logger.info("Checking lowercase name for entry: %s", entry.uri)
+            directory_name = Path(directory.uri).name
 
-            if entry_name != entry_name.lower():
-                message = f"Name must be lowercase: {entry.uri}"
-                logger.info("Lowercase name violation found: %s", message)
-                violations.append(message)
+            if SNAKE_CASE_DIRECTORY_PATTERN.fullmatch(directory_name):
+                continue
 
-        logger.info("Checked %d entries for lowercase naming", checked_count)
+            message = (
+                "Directory name must be lower snake_case without special "
+                f"characters: {directory.uri}"
+            )
+            logger.info("Directory naming violation found: %s", message)
+            violations.append(message)
+
+        logger.info("Checked %d directories for snake_case naming", checked_count)
         return violations
 
     def _validate_feed_configuration(
@@ -133,7 +139,7 @@ class DirectoryStructureValidation(Validation):
         )
 
         directory_count = 0
-        for directory in self._iter_directories(provider, feed_config_path):
+        for directory in self._iter_feed_configuration_directories(provider, feed_config_path):
             directory_count += 1
             logger.info("Checking feed lookup requirement for directory: %s", directory.uri)
             directory_violations = self._validate_feed_lookup_for_directory(
@@ -202,7 +208,7 @@ class DirectoryStructureValidation(Validation):
         logger.info("Feed lookup violation found: %s", message)
         return [message]
 
-    def _iter_entries(
+    def _iter_directories(
         self,
         provider,
         path: StoragePath,
@@ -213,23 +219,23 @@ class DirectoryStructureValidation(Validation):
             return
 
         for child in provider.list(path):
-            if (
-                provider.is_directory(child)
-                and Path(child.uri).name in ignored_directories
-            ):
+            if not provider.is_directory(child):
+                continue
+
+            directory_name = Path(child.uri).name
+            if directory_name in ignored_directories:
                 logger.info("Skipping ignored directory: %s", child.uri)
                 continue
 
             yield child
-            if provider.is_directory(child):
-                yield from self._iter_entries(
-                    provider,
-                    child,
-                    ignored_directories,
-                    logger,
-                )
+            yield from self._iter_directories(
+                provider,
+                child,
+                ignored_directories,
+                logger,
+            )
 
-    def _iter_directories(self, provider, path: StoragePath):
+    def _iter_feed_configuration_directories(self, provider, path: StoragePath):
         if not provider.is_directory(path):
             return
 
@@ -237,4 +243,4 @@ class DirectoryStructureValidation(Validation):
 
         for child in provider.list(path):
             if provider.is_directory(child):
-                yield from self._iter_directories(provider, child)
+                yield from self._iter_feed_configuration_directories(provider, child)
