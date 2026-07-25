@@ -24,7 +24,7 @@ class BaseDataQualityCheck(ABC):
     def validate(self) -> CheckResult:
         pass
 
-    def _generate_test_table_df(self) -> DataFrame:
+    def _generate_test_table_df(self) -> DataFrame | None:
         spark = self.context.spark_config.spark
         logger = self.context.logging.logger
 
@@ -34,16 +34,35 @@ class BaseDataQualityCheck(ABC):
         ]
         resolved_table_names = list(dict.fromkeys(filter(None, table_names)))
 
+
         for table in resolved_table_names:
             if spark.catalog.tableExists(table):
                 return spark.table(table)
-
         self._raise_data_quality_error(
             logger,
             DataQualityErrors.TABLE_NOT_FOUND,
             table_names=resolved_table_names,
             check_identifier=self.check_obj.check_identifier,
         )
+
+        return None
+
+
+    def _generate_test_table_df_by_query(self) -> DataFrame | None:
+        spark = self.context.spark_config.spark
+        logger = self.context.logging.logger
+
+        try:
+            return spark.sql(self.check_obj.sql_query)
+        except Exception as e:
+            self._raise_data_quality_error(
+                logger,
+                DataQualityErrors.TABLE_NOT_FOUND,
+                cause=e,
+                check_identifier=self.check_obj.check_identifier,
+            )
+
+            return None
 
     @staticmethod
     def _raise_data_quality_error(

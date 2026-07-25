@@ -54,4 +54,4 @@ class Orchestrator:
     @staticmethod
     def __enforce_data_quality(configuration_context: ConfigurationContext):
         my_data_quality_manager = DataQualityManager(configuration_context)
-        my_data_quality_manager.load_checks()
+        my_data_quality_manager.run()

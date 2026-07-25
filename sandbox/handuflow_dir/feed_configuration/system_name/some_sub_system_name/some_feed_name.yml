@@ -57,54 +57,16 @@ feed_specs:
 
 
 data_quality_checks:
-
   - check_identifier: UNIQUE_ID_1
     check_type: STANDARD
     dependency_datasets:
-      - some.ds.name
-      - some.ds.name
+      - ds.name
+      - ds.name
     column: some_column_name
     checks:
-      - check:
-          name: null
-          range:
-            - from_inc: 10
-            - to_exc: 20
-    threshold: 0.3
-    run_type: PRE_LOAD
-
-
-  - check_identifier: UNIQUE_ID_2
-    check_type: CUSTOM
-    dependency_datasets:
-      - some.ds.name
-      - some.ds.name
-    sql_query: |
-      Some SQL query
-    run_type: PRE_LOAD
-      
-
-  - check_identifier: UNIQUE_ID_4
-    check_type: STANDARD
-    dependency_datasets:
-      - some.ds.name
-      - some.ds.name
-    column: some_column_name
-    checks:
-      - null_check
-      - duplicate_check
-      - range_check:
+      - name: null_check
+        range:
           - from_inc: 10
           - to_exc: 20
+    threshold: 0.3
     run_type: PRE_LOAD
-
-
-
-  - check_identifier: UNIQUE_ID_7
-    check_type: CUSTOM
-    dependency_datasets:
-      - some.ds.name
-      - some.ds.name
-    sql_query: |
-      Some SQL query 2
-    run_type: POST_LOAD

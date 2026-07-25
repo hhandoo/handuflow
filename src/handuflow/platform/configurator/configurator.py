@@ -113,6 +113,7 @@ class SystemConfigurator:
     def _build_context(self) -> ConfigurationContext:
         default = DefaultConfiguration(
             system_name=self._config[DEFAULT_SECTION]["system_name"],
+            environment=self._config[DEFAULT_SECTION]["environment"]
         )
         return ConfigurationContext(
             run_id=self._run_id,
