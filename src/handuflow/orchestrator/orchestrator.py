@@ -22,19 +22,19 @@ class Orchestrator:
         config_context.logging.logger.info(
             "Performing system validation..."
         )
-        validation_result, all_passed = self.__run_validation(config_context)
+        # validation_result, all_passed = self.__run_validation(config_context)
+        #
+        # if all_passed:
+        #     config_context.logging.logger.info(
+        #         "System validation completed and no issues have been detected."
+        #     )
+        # else:
+        #     config_context.logging.logger.error(
+        #         "System validation failed, please check the configuration and try again, "
+        #         "terminating workflow."
+        #     )
 
-        if all_passed:
-            config_context.logging.logger.info(
-                "System validation completed and no issues have been detected."
-            )
-        else:
-            config_context.logging.logger.error(
-                "System validation failed, please check the configuration and try again, "
-                "terminating workflow."
-            )
-
-        self.__enforce_data_quality(config_context)
+        pre_load_results_list = self.__enforce_data_quality(configuration_context = config_context, run_type = "PRE_LOAD")
 
         config_context.logging.logger.info(f"Thank you for using HanduFLOW [v{__version__}].")
 
@@ -52,6 +52,6 @@ class Orchestrator:
         return configuration.get_configuration_context()
 
     @staticmethod
-    def __enforce_data_quality(configuration_context: ConfigurationContext):
+    def __enforce_data_quality(configuration_context: ConfigurationContext, run_type: str):
         my_data_quality_manager = DataQualityManager(configuration_context)
-        my_data_quality_manager.run()
+        return my_data_quality_manager.run(run_type)

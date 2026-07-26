@@ -1,20 +1,26 @@
 feed_meta:
-  unique_identifier: "TEST"
-  upstream_identifier: "TEST1"
-  downstream_identifier: "TEST2"
+  unique_identifier: "employee"
+  upstream_identifier:
+  downstream_identifier:
   vacuum_hours: 234
+
+
 load_details:
   type: "FULL_LOAD"
+
+
 source:
   type: "hive_metastore"
   format: "delta"
-  schema: "test"
-  table: "test"
+  schema: "demo"
+  table: "employee"
 target:
   type: "hive_metastore"
   format: "delta"
   schema: "test"
   table: "test1"
+
+
 feed_specs:
   primary_key: "id"
   composite_key:
@@ -60,9 +66,7 @@ data_quality_checks:
   - check_identifier: UNIQUE_ID_1
     check_type: STANDARD
     dependency_datasets:
-      - ds.name
-      - ds.name
-    column: some_column_name
+    column: age
     checks:
       - name: null_check
         range:
