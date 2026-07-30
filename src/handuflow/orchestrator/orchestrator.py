@@ -4,7 +4,6 @@ from ..data_quality import DataQualityManager
 from ..platform.configurator import SystemConfigurator
 from ..platform.configurator.dataclasses.context import ConfigurationContext
 from ..platform.validation import ValidationResult, ValidationRunner
-
 from pyspark.sql import SparkSession
 
 
@@ -35,6 +34,8 @@ class Orchestrator:
         #     )
 
         pre_load_results_list = self.__enforce_data_quality(configuration_context = config_context, run_type = "PRE_LOAD")
+
+        print(pre_load_results_list)
 
         config_context.logging.logger.info(f"Thank you for using HanduFLOW [v{__version__}].")
 

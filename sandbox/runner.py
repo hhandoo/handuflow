@@ -1,6 +1,6 @@
 import os
-os.environ["HADOOP_HOME"] = r"C:\hadoop-3.3.6"
-os.environ["PATH"] = r"C:\hadoop-3.3.6\bin;" + os.environ["PATH"]
+# os.environ["HADOOP_HOME"] = r"C:\hadoop-3.3.6"
+# os.environ["PATH"] = r"C:\hadoop-3.3.6\bin;" + os.environ["PATH"]
 
 
 from pyspark.sql import SparkSession
@@ -51,5 +51,7 @@ df.write.mode("append").insertInto("demo.employee", overwrite=True)
 # for r in results:
 #     print(r)
 
-orchestrator = Orchestrator(spark, r"C:\Users\hando\PycharmProjects\handuflow\sandbox\handuflow_dir")
+# orchestrator = Orchestrator(spark, r"C:\Users\hando\PycharmProjects\handuflow\sandbox\handuflow_dir")
+orchestrator = Orchestrator(spark, r"/home/handu/Documents/dev/handuflow/sandbox/handuflow_dir")
+
 orchestrator.run()

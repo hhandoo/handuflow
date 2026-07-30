@@ -1,13 +1,13 @@
 import yaml
 
 from .dataclass import CheckDC, CheckObj, CheckResult
-from ..platform.configurator.dataclasses import context
 from ..platform.configurator.dataclasses.context import ConfigurationContext
 from .checks import *
 
 CHECK_REGISTRY = {
     "custom_check": CustomCheck,
     "null_check": NullCheck,
+    "not_blank_check": NotBlankCheck,
 }
 
 class DataQualityManager:

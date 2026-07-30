@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from typing import Any, NoReturn
 
 from pyspark.sql import DataFrame, SparkSession
-
 from ..platform.configurator.dataclasses.context import ConfigurationContext
 from ..platform.exceptions.base import HanduflowError
 from ..platform.exceptions.definition import ErrorDefinition
@@ -21,9 +20,6 @@ class BaseDataQualityCheck(ABC):
     def __init__(self, check_obj: CheckObj, context: ConfigurationContext) -> None:
         self.check_obj = check_obj
         self.context = context
-
-
-
 
     @property
     def _logger(self) -> logging.Logger:
@@ -126,7 +122,8 @@ class BaseDataQualityCheck(ABC):
             )
 
         try:
-            return self._spark.sql(sql_query)
+            dfff = self._spark.sql(sql_query) # pyright: ignore[reportUnknownMemberType]
+            return dfff
         except Exception as exc:
             self._raise_data_quality_error(
                 self._logger,
@@ -140,7 +137,6 @@ class BaseDataQualityCheck(ABC):
         pass_pct = (passed_rows / total_rows) * 100 if total_rows else 0.0
         fail_pct = (failed_rows / total_rows) * 100 if total_rows else 0.0
         threshold = self.check_obj.threshold if self.check_obj.threshold is not None else 0.0
-
 
         return CheckResult(
             unique_check_name=self.check_obj.check_identifier,

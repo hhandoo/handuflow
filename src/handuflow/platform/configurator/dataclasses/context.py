@@ -15,4 +15,4 @@ class ConfigurationContext:
     storage_path: StoragePath
     storage_manager: StorageManager
     spark_config: SparkConfiguration
-    list_of_feed_ymls: list
+    list_of_feed_ymls: list[StoragePath]
