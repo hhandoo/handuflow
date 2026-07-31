@@ -7,9 +7,8 @@ from ..dataclass import CheckResult
 from ...platform.exceptions.errors.data_quality import DataQualityErrors
 
 
-class NullCheck(BaseDataQualityCheck):
-    """Validate that null values in a column are within configured limits."""
-
+class DuplicateCheck(BaseDataQualityCheck):
+    """Validate that there are no duplicates in the specified column."""
     def _validate(self) -> CheckResult:
         column = self.check_obj.column
         table_name = self.check_obj.table_path
@@ -23,5 +22,7 @@ class NullCheck(BaseDataQualityCheck):
                 column=column,
             )
         total_rows = dataframe.count()
-        failed_rows = dataframe.filter(F.col(column).isNull()).count()
+        failed_rows = dataframe.filter(
+            F.trim(F.col(column)) == ""
+        ).count()
         return self._build_result(total_rows=total_rows, failed_rows=failed_rows)

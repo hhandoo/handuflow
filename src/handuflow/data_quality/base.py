@@ -17,9 +17,10 @@ from .dataclass.result import CheckResult
 class BaseDataQualityCheck(ABC):
     """Shared behavior for data quality check implementations."""
 
-    def __init__(self, check_obj: CheckObj, context: ConfigurationContext) -> None:
+    def __init__(self, check_obj: CheckObj, current_check_name: str, context: ConfigurationContext) -> None:
         self.check_obj = check_obj
         self.context = context
+        self.current_check_name = current_check_name
 
     @property
     def _logger(self) -> logging.Logger:
@@ -29,9 +30,22 @@ class BaseDataQualityCheck(ABC):
     def _spark(self) -> SparkSession:
         return self.context.spark_config.spark
 
-    @abstractmethod
+
     def validate(self) -> CheckResult:
+        self._logger.info(
+            "Running [%s] from [%s] on column [%s] in table [%s]...",
+            self.current_check_name,
+            self.check_obj.check_group_identifier,
+            self.check_obj.column,
+            self.check_obj.table_path,
+        )
+
+        return self._validate()
+
+    @abstractmethod
+    def _validate(self) -> CheckResult:
         """Run the check and return a structured result."""
+
 
     @staticmethod
     def _parse_table_identifiers(table_reference: str) -> list[str]:
@@ -99,7 +113,7 @@ class BaseDataQualityCheck(ABC):
                 self._logger.debug(
                     "Resolved table '%s' for check '%s' in '%s' environment.",
                     table_name,
-                    self.check_obj.check_identifier,
+                    self.check_obj.check_group_identifier,
                     self.context.default.environment,
                 )
                 return self._spark.table(table_name)
@@ -108,7 +122,7 @@ class BaseDataQualityCheck(ABC):
             self._logger,
             DataQualityErrors.TABLE_NOT_FOUND,
             table_names=table_names,
-            check_identifier=self.check_obj.check_identifier,
+            check_group_identifier=self.check_obj.check_group_identifier,
             environment=self.context.default.environment,
         )
 
@@ -118,7 +132,7 @@ class BaseDataQualityCheck(ABC):
             self._raise_data_quality_error(
                 self._logger,
                 DataQualityErrors.SQL_QUERY_ERROR,
-                check_identifier=self.check_obj.check_identifier,
+                check_group_identifier=self.check_obj.check_group_identifier,
             )
 
         try:
@@ -129,25 +143,36 @@ class BaseDataQualityCheck(ABC):
                 self._logger,
                 DataQualityErrors.SQL_QUERY_ERROR,
                 cause=exc,
-                check_identifier=self.check_obj.check_identifier,
+                check_group_identifier=self.check_obj.check_group_identifier,
             )
 
     def _build_result(self, *, total_rows: int, failed_rows: int) -> CheckResult:
         passed_rows = total_rows - failed_rows
         pass_pct = (passed_rows / total_rows) * 100 if total_rows else 0.0
         fail_pct = (failed_rows / total_rows) * 100 if total_rows else 0.0
-        threshold = self.check_obj.threshold if self.check_obj.threshold is not None else 0.0
+        threshold_pct = self.check_obj.threshold * 100 if self.check_obj.threshold is not None else 0.0
+
+        is_passed = True
+        if fail_pct > 0.0 and threshold_pct == 0.0:
+            is_passed = False
+        elif fail_pct > threshold_pct:
+            is_passed = False
+
+        self._logger.info(
+            f"Check [{self.current_check_name}] on table [{self.check_obj.table_path}] : { 'PASSED' if is_passed else 'FAILED' } !!"
+        )  
 
         return CheckResult(
-            unique_check_name=self.check_obj.check_identifier,
+            check_group_identifier=self.check_obj.check_group_identifier,
+            check_name=self.current_check_name,
             table_name=self.check_obj.table_path,
             total_rows=total_rows,
             passed_rows=passed_rows,
             failed_rows=failed_rows,
             pass_pct=pass_pct,
             fail_pct=fail_pct,
-            threshold=threshold,
-            is_passed=fail_pct <= threshold,
+            threshold_pct=threshold_pct,
+            is_passed=is_passed,
         )
 
     @staticmethod
@@ -173,6 +198,6 @@ class BaseDataQualityCheck(ABC):
         self._raise_data_quality_error(
             self._logger,
             DataQualityErrors.DATA_QUALITY_UNKNOWN,
-            check_identifier=self.check_obj.check_identifier,
+            check_group_identifier=self.check_obj.check_group_identifier,
             cause=exc,
         )
