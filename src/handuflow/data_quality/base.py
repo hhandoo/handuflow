@@ -12,6 +12,7 @@ from ..platform.exceptions.domains.data_quality import DataQualityError
 from ..platform.exceptions.errors.data_quality import DataQualityErrors
 from .dataclass import CheckObj
 from .dataclass.result import CheckResult
+from pyspark.errors import AnalysisException
 
 
 class BaseDataQualityCheck(ABC):
@@ -145,15 +146,24 @@ class BaseDataQualityCheck(ABC):
 
     def _generate_test_table_df(self) -> DataFrame:
         table_names = self._resolve_table_names()
+
         for table_name in table_names:
-            if self._spark.catalog.tableExists(table_name):
+            try:
+                if self._spark.catalog.tableExists(table_name):
+                    self._logger.debug(
+                        "Resolved table '%s' for check '%s' in '%s' environment.",
+                        table_name,
+                        self.check_obj.check_group_identifier,
+                        self.context.default.environment,
+                    )
+                    return self._spark.table(table_name)
+
+            except AnalysisException:
                 self._logger.debug(
-                    "Resolved table '%s' for check '%s' in '%s' environment.",
+                    "Skipping unsupported table identifier '%s'.",
                     table_name,
-                    self.check_obj.check_group_identifier,
-                    self.context.default.environment,
                 )
-                return self._spark.table(table_name)
+                continue
 
         self._raise_data_quality_error(
             self._logger,
