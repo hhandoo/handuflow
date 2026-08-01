@@ -66,16 +66,16 @@ data_quality_checks:
     dependency_datasets:
     column: event_ts
     checks:
-      # - name: range_check
-      #   range:
-      #     from_inc: "2026-07-01 00:00:00+05:30"
-      #     to_exc: "2026-07-31 00:00:00+05:30"
-      #     spark_timestamp_format: "yyyy-MM-dd HH:mm:ss.SSSXXX"
-      #   threshold: 0.1
-      # - name: duplicate_check
-      # - name: not_blank_check
-      # - name: null_check
+      - name: range_check
+        range:
+          from_inc: "2026-07-01 00:00:00+05:30"
+          to_exc: "2026-07-31 00:00:00+05:30"
+          spark_timestamp_format: "yyyy-MM-dd HH:mm:ss.SSSXXX"
+        threshold: 0.1
+      - name: duplicate_check
+      - name: not_blank_check
+      - name: null_check
       - name: custom_check
-        sql_query_pass: "SELECT COUNT(*) FROM employee"
-        sql_query_fail: "SELECT COUNT(*) FROM employee WHERE name IS NULL"
+        sql_query_pass: "SELECT * FROM `demo`.`employee`"
+        sql_query_fail: "SELECT * FROM `demo`.`employee` WHERE name IS NULL"
         threshold: 0.01
