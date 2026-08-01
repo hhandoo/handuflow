@@ -1,12 +1,12 @@
 # models/result.py
 
 from dataclasses import dataclass
-from typing import Any
-
 
 @dataclass
 class CheckResult:
     check_group_identifier: str
+    description:str
+    run_type:str
     check_name: str
     table_name: str
     total_rows: int

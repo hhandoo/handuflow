@@ -40,9 +40,6 @@ class HanduflowError(Exception):
     def message(self) -> str:
         return self.error.message
 
-    @property
-    def severity(self):
-        return self.error.severity
 
     @property
     def recoverable(self):
@@ -56,7 +53,6 @@ class HanduflowError(Exception):
         return {
             "code": self.code,
             "message": self.message,
-            "severity": self.severity,
             "recoverable": self.recoverable,
             "context": self.context,
             "cause": repr(self.cause) if self.cause else None,

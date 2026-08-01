@@ -17,10 +17,25 @@ from .dataclass.result import CheckResult
 class BaseDataQualityCheck(ABC):
     """Shared behavior for data quality check implementations."""
 
-    def __init__(self, check_obj: CheckObj, current_check_name: str, context: ConfigurationContext) -> None:
+    def __init__(
+        self,
+        check_obj: CheckObj,
+        current_check_name: str,
+        check_range: dict[str, int | float | str] | None,
+        spark_timestamp_format: str | None,
+        sql_query_pass: str | None,
+        sql_query_fail: str | None,
+        threshold: float | None,
+        context: ConfigurationContext,
+    ) -> None:
         self.check_obj = check_obj
         self.context = context
         self.current_check_name = current_check_name
+        self.check_range = check_range
+        self.spark_timestamp_format = spark_timestamp_format
+        self.sql_query_pass = sql_query_pass
+        self.sql_query_fail = sql_query_fail
+        self.threshold = threshold
 
     @property
     def _logger(self) -> logging.Logger:
@@ -29,7 +44,6 @@ class BaseDataQualityCheck(ABC):
     @property
     def _spark(self) -> SparkSession:
         return self.context.spark_config.spark
-
 
     def validate(self) -> CheckResult:
         self._logger.info(
@@ -45,7 +59,6 @@ class BaseDataQualityCheck(ABC):
     @abstractmethod
     def _validate(self) -> CheckResult:
         """Run the check and return a structured result."""
-
 
     @staticmethod
     def _parse_table_identifiers(table_reference: str) -> list[str]:
@@ -88,15 +101,39 @@ class BaseDataQualityCheck(ABC):
                 add(self._format_table_reference(schema_table_parts, quoted=False))
                 add(self._format_table_reference(schema_table_parts, quoted=True))
             if catalog_schema_table_parts:
-                add(self._format_table_reference(catalog_schema_table_parts[-2:], quoted=False))
-                add(self._format_table_reference(catalog_schema_table_parts[-2:], quoted=True))
+                add(
+                    self._format_table_reference(
+                        catalog_schema_table_parts[-2:], quoted=False
+                    )
+                )
+                add(
+                    self._format_table_reference(
+                        catalog_schema_table_parts[-2:], quoted=True
+                    )
+                )
             if catalog_schema_table_parts:
-                add(self._format_table_reference(catalog_schema_table_parts, quoted=False))
-                add(self._format_table_reference(catalog_schema_table_parts, quoted=True))
+                add(
+                    self._format_table_reference(
+                        catalog_schema_table_parts, quoted=False
+                    )
+                )
+                add(
+                    self._format_table_reference(
+                        catalog_schema_table_parts, quoted=True
+                    )
+                )
         else:
             if catalog_schema_table_parts:
-                add(self._format_table_reference(catalog_schema_table_parts, quoted=True))
-                add(self._format_table_reference(catalog_schema_table_parts, quoted=False))
+                add(
+                    self._format_table_reference(
+                        catalog_schema_table_parts, quoted=True
+                    )
+                )
+                add(
+                    self._format_table_reference(
+                        catalog_schema_table_parts, quoted=False
+                    )
+                )
             if schema_table_parts:
                 add(self._format_table_reference(schema_table_parts, quoted=True))
                 add(self._format_table_reference(schema_table_parts, quoted=False))
@@ -126,9 +163,9 @@ class BaseDataQualityCheck(ABC):
             environment=self.context.default.environment,
         )
 
-    def _generate_test_table_df_by_query(self) -> DataFrame:
-        sql_query = self.check_obj.sql_query
-        if not isinstance(sql_query, str) or not sql_query:
+    def _generate_positive_test_table_df_by_query(self) -> DataFrame:
+
+        if not isinstance(self.sql_query_pass, str) or not self.sql_query_pass:
             self._raise_data_quality_error(
                 self._logger,
                 DataQualityErrors.SQL_QUERY_ERROR,
@@ -136,8 +173,26 @@ class BaseDataQualityCheck(ABC):
             )
 
         try:
-            dfff = self._spark.sql(sql_query) # pyright: ignore[reportUnknownMemberType]
-            return dfff
+            return self._spark.sql(sqlQuery=self.sql_query_pass)  # type: ignore
+        except Exception as exc:
+            self._raise_data_quality_error(
+                self._logger,
+                DataQualityErrors.SQL_QUERY_ERROR,
+                cause=exc,
+                check_group_identifier=self.check_obj.check_group_identifier,
+            )
+
+    def _generate_negative_test_table_df_by_query(self) -> DataFrame:
+
+        if not isinstance(self.sql_query_fail, str) or not self.sql_query_fail:
+            self._raise_data_quality_error(
+                self._logger,
+                DataQualityErrors.SQL_QUERY_ERROR,
+                check_group_identifier=self.check_obj.check_group_identifier,
+            )
+
+        try:
+            return self._spark.sql(sqlQuery=self.sql_query_fail)  # type: ignore
         except Exception as exc:
             self._raise_data_quality_error(
                 self._logger,
@@ -150,7 +205,7 @@ class BaseDataQualityCheck(ABC):
         passed_rows = total_rows - failed_rows
         pass_pct = (passed_rows / total_rows) * 100 if total_rows else 0.0
         fail_pct = (failed_rows / total_rows) * 100 if total_rows else 0.0
-        threshold_pct = self.check_obj.threshold * 100 if self.check_obj.threshold is not None else 0.0
+        threshold_pct = self.threshold * 100 if self.threshold is not None else 0.0
 
         is_passed = True
         if fail_pct > 0.0 and threshold_pct == 0.0:
@@ -160,10 +215,12 @@ class BaseDataQualityCheck(ABC):
 
         self._logger.info(
             f"Check [{self.current_check_name}] on table [{self.check_obj.table_path}] : { 'PASSED' if is_passed else 'FAILED' } !!"
-        )  
+        )
 
         return CheckResult(
             check_group_identifier=self.check_obj.check_group_identifier,
+            description=self.check_obj.description,
+            run_type=self.check_obj.run_type,
             check_name=self.current_check_name,
             table_name=self.check_obj.table_path,
             total_rows=total_rows,
@@ -197,7 +254,7 @@ class BaseDataQualityCheck(ABC):
 
         self._raise_data_quality_error(
             self._logger,
-            DataQualityErrors.DATA_QUALITY_UNKNOWN,
+            DataQualityErrors.UNKNOWN,
             check_group_identifier=self.check_obj.check_group_identifier,
             cause=exc,
         )

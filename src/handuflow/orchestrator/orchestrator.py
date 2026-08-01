@@ -35,7 +35,8 @@ class Orchestrator:
 
         pre_load_results_list = self.__enforce_data_quality(configuration_context = config_context, run_type = "PRE_LOAD")
 
-        print(pre_load_results_list)
+        for res in pre_load_results_list:
+            print(res)
 
         config_context.logging.logger.info(f"Thank you for using HanduFLOW [v{__version__}].")
 
