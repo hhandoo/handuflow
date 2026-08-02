@@ -2,12 +2,14 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class CheckResult:
     check_group_identifier: str
-    description:str
-    run_type:str
+    description: str
+    run_type: str
     check_name: str
+    column: str
     table_name: str
     total_rows: int
     passed_rows: int

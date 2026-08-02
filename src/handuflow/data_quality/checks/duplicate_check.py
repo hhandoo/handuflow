@@ -8,11 +8,14 @@ from ...platform.exceptions.errors.data_quality import DataQualityErrors
 
 
 class DuplicateCheck(BaseDataQualityCheck):
-    """Validate that there are no duplicates in the specified column."""
+    """Validate that there are no duplicate values in the specified column."""
+
     def _validate(self) -> CheckResult:
         column = self.check_obj.column
         table_name = self.check_obj.table_path
+
         dataframe = self._generate_test_table_df()
+
         if column not in dataframe.columns:
             self._raise_data_quality_error(
                 self._logger,
@@ -21,8 +24,20 @@ class DuplicateCheck(BaseDataQualityCheck):
                 table_name=table_name,
                 column=column,
             )
+
         total_rows = dataframe.count()
-        failed_rows = dataframe.filter(
-            F.trim(F.col(column)) == ""
+
+        duplicate_values = (
+            dataframe.groupBy(column).count().filter(F.col("count") > 1).select(column)
+        )
+
+        failed_rows = dataframe.join(
+            duplicate_values,
+            on=column,
+            how="inner",
         ).count()
-        return self._build_result(total_rows=total_rows, failed_rows=failed_rows)
+
+        return self._build_result(
+            total_rows=total_rows,
+            failed_rows=failed_rows,
+        )

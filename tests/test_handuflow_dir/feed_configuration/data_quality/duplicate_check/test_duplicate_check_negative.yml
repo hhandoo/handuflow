@@ -1,0 +1,69 @@
+feed_meta:
+  unique_identifier: "employee4"
+  upstream_identifier:
+  downstream_identifier:
+  vacuum_hours: 234
+
+load_details:
+  type: "FULL_LOAD"
+
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee4"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "test"
+  table: "test1"
+
+feed_specs:
+  primary_key: "id"
+  composite_key:
+    - "id"
+    - "some_col"
+    - "some_other_col"
+  partition_columns:
+    - "id"
+    - "some_col"
+  optimize_command:
+    enabled: true
+    where:
+      year: 2025
+      month: 7
+    zorder_by:
+      - customer_id
+      - order_date
+  custom_selection:
+    - enabled: true
+    - sql_file: test.sql
+  enforce_schema:
+    type: struct
+    fields:
+      - name: id
+        type: integer
+        nullable: false
+        metadata:
+          primaryKey: true
+      - name: some_col
+        type: string
+        nullable: true
+        metadata:
+          description: Employee ID
+          primaryKey: true
+          sourceColumn: emp_id
+      - name: some_other_col
+        type: double
+        nullable: true
+        metadata: {}
+
+data_quality_checks:
+  - check_group_identifier: UNIQUE_GROUP_ID_1
+    description: "Ensure there are no null, blank and duplicate values in the name column and that the values are within the specified threshold"
+    run_type: PRE_LOAD
+    dependency_datasets:
+    column: event_ts
+    checks:
+      - name: duplicate_check

@@ -232,6 +232,7 @@ class BaseDataQualityCheck(ABC):
             description=self.check_obj.description,
             run_type=self.check_obj.run_type,
             check_name=self.current_check_name,
+            column=self.check_obj.column,
             table_name=self.check_obj.table_path,
             total_rows=total_rows,
             passed_rows=passed_rows,
