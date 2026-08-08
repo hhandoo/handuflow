@@ -17,7 +17,6 @@ class ValidationRunner:
         self._configuration_context = configuration_context
         self._validations = VALIDATIONS
 
-
     def add_validation(self, validation: Validation) -> None:
         self._validations.append(validation)
 

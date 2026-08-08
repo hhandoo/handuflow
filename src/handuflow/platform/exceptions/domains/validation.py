@@ -6,6 +6,4 @@ from handuflow.platform.exceptions.base import HanduflowError
 
 
 class ValidationError(HanduflowError):
-    """
-    Base exception for all validation operations.
-    """
+    """Base exception for all validation operations."""

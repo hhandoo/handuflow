@@ -18,27 +18,31 @@ class Orchestrator:
         config_context.logging.logger.info(
             f"Welcome to HanduFLOW [v{__version__}]: Framework for Lakehouse Workflows and Orchestration."
         )
-        config_context.logging.logger.info(
-            "Performing system validation..."
-        )
-        # validation_result, all_passed = self.__run_validation(config_context)
-        #
-        # if all_passed:
-        #     config_context.logging.logger.info(
-        #         "System validation completed and no issues have been detected."
-        #     )
-        # else:
-        #     config_context.logging.logger.error(
-        #         "System validation failed, please check the configuration and try again, "
-        #         "terminating workflow."
-        #     )
+        config_context.logging.logger.info("Performing system validation...")
+        validation_result, all_passed = self.__run_validation(config_context)
 
-        pre_load_results_list = self.__enforce_data_quality(configuration_context = config_context, run_type = "PRE_LOAD")
+        print(validation_result)
+
+        if all_passed:
+            config_context.logging.logger.info(
+                "System validation completed and no issues have been detected."
+            )
+        else:
+            config_context.logging.logger.error(
+                "System validation failed, please check the configuration and try again, "
+                "terminating workflow."
+            )
+
+        pre_load_results_list = self.__enforce_data_quality(
+            configuration_context=config_context, run_type="PRE_LOAD"
+        )
 
         for res in pre_load_results_list:
             print(res)
 
-        config_context.logging.logger.info(f"Thank you for using HanduFLOW [v{__version__}].")
+        config_context.logging.logger.info(
+            f"Thank you for using HanduFLOW [v{__version__}]."
+        )
 
     @staticmethod
     def __run_validation(
@@ -49,11 +53,15 @@ class Orchestrator:
         return results, all(result.passed for result in results)
 
     def __get_configuration_context(self) -> ConfigurationContext:
-        configuration = SystemConfigurator(self.handu_flow_directory_path, self.spark_session)
+        configuration = SystemConfigurator(
+            self.handu_flow_directory_path, self.spark_session
+        )
         configuration.configure()
         return configuration.get_configuration_context()
 
     @staticmethod
-    def __enforce_data_quality(configuration_context: ConfigurationContext, run_type: str):
+    def __enforce_data_quality(
+        configuration_context: ConfigurationContext, run_type: str
+    ):
         my_data_quality_manager = DataQualityManager(configuration_context)
         return my_data_quality_manager.run(run_type)

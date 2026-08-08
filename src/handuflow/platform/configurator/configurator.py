@@ -15,10 +15,14 @@ from datetime import datetime
 from ..logging import StorageFileHandler, StorageRotatingFileHandler
 from ..storage import StorageManager, StoragePath, StorageProvider
 from ..exceptions import ConfigurationError, ConfigurationErrors, HanduflowError
-from .dataclasses import ConfigurationContext, DefaultConfiguration, LoggingConfiguration, SparkConfiguration
+from .dataclasses import (
+    ConfigurationContext,
+    DefaultConfiguration,
+    LoggingConfiguration,
+    SparkConfiguration,
+)
 
 from pyspark.sql import SparkSession
-
 
 CONFIG_FILE_NAME = "config.ini"
 DEFAULT_SECTION = "DEFAULT"
@@ -113,7 +117,7 @@ class SystemConfigurator:
     def _build_context(self) -> ConfigurationContext:
         default = DefaultConfiguration(
             system_name=self._config[DEFAULT_SECTION]["system_name"],
-            environment=self._config[DEFAULT_SECTION]["environment"]
+            environment=self._config[DEFAULT_SECTION]["environment"],
         )
         return ConfigurationContext(
             run_id=self._run_id,
@@ -122,14 +126,11 @@ class SystemConfigurator:
             storage_path=self._base_directory,
             storage_manager=self._storage_manager,
             spark_config=self._build_spark_configuration(),
-            list_of_feed_ymls=self._read_list_of_feed_ymls()
+            list_of_feed_ymls=self._read_list_of_feed_ymls(),
         )
-
 
     def _build_spark_configuration(self):
-        return SparkConfiguration(
-            spark=self._spark
-        )
+        return SparkConfiguration(spark=self._spark)
 
     def _build_logging_configuration(self, system_name: str) -> LoggingConfiguration:
         section = self._config[LOGGING_SECTION]
@@ -137,11 +138,10 @@ class SystemConfigurator:
         log_format = section.get("log_format") or DEFAULT_LOG_FORMAT
         log_directory_name = section["log_directory_name"]
         log_file_name = section["log_file_name"]
-        max_bytes = section.getint("max_bytes", fallback=0)
-        backup_count = section.getint("backup_count", fallback=0)
+        max_bytes = section.getint("max_bytes", fallback=1048576)
+        backup_count = section.getint("backup_count", fallback=5)
         default_log_level = int(section["default_log_level"])
-        log_retention_days = section.getint("log_retention_days", fallback=0)
-
+        log_retention_days = section.getint("log_retention_days", fallback=10)
 
         log_directory = StoragePath(f"{self._base_directory.uri}/{log_directory_name}")
         file_handler = self._create_file_handler(
@@ -185,7 +185,9 @@ class SystemConfigurator:
 
         if log_type == ROTATING_LOG_TYPE:
             log_path = StoragePath(f"{log_directory.uri}/{log_file_name}.log")
-            return StorageRotatingFileHandler(log_path, storage, max_bytes, backup_count)
+            return StorageRotatingFileHandler(
+                log_path, storage, max_bytes, backup_count
+            )
 
         return StorageFileHandler(
             log_directory,
