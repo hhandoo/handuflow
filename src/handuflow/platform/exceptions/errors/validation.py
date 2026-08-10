@@ -129,3 +129,43 @@ class ValidationErrors:
         code="HF-VALIDATION-022",
         message="Configuration value is invalid.",
     )
+
+    FEED_CONFIGURATION_FILE_READ_FAILED = ErrorDefinition(
+        code="HF-VALIDATION-005",
+        message="Failed to read feed configuration YAML file.",
+    )
+
+    FEED_CONFIGURATION_INVALID_YML = ErrorDefinition(
+        code="HF-VALIDATION-006",
+        message="Feed configuration YAML file is invalid.",
+    )
+
+    FEED_META_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-023",
+        message="feed_meta section is missing.",
+    )
+
+    FEED_META_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-024",
+        message="feed_meta section is invalid.",
+    )
+
+    FEED_META_UNIQUE_IDENTIFIER_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-025",
+        message="feed_meta.unique_identifier is mandatory.",
+    )
+
+    FEED_META_VACUUM_HOURS_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-026",
+        message="feed_meta.vacuum_hours is mandatory.",
+    )
+
+    FEED_META_VACUUM_HOURS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-027",
+        message="feed_meta.vacuum_hours must be an integer.",
+    )
+
+    FEED_META_VACUUM_HOURS_OUT_OF_RANGE = ErrorDefinition(
+        code="HF-VALIDATION-028",
+        message="feed_meta.vacuum_hours is outside the allowed range.",
+    )

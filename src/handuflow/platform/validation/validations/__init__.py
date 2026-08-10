@@ -8,8 +8,13 @@ from ..base import Validation
 # from .feed_configuration_validation import FeedConfigurationValidation
 from .enforce_HFdir_structure import EnforceHFDirStructure
 from .HF_config_validation import HFConfigValidation
+from .validate_feed_meta import FeedMetaValidation
 
-VALIDATIONS: list[Validation] = [EnforceHFDirStructure(), HFConfigValidation()]
+VALIDATIONS: list[Validation] = [
+    EnforceHFDirStructure(),
+    HFConfigValidation(),
+    FeedMetaValidation(),
+]
 
 __all__ = [
     "VALIDATIONS",
