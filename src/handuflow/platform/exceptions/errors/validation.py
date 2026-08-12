@@ -169,3 +169,163 @@ class ValidationErrors:
         code="HF-VALIDATION-028",
         message="feed_meta.vacuum_hours is outside the allowed range.",
     )
+
+    # ---------------------------------------------------------
+    # Load details
+    # ---------------------------------------------------------
+
+    FEED_META_LOAD_DETAILS_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-029",
+        message="load_details section is missing.",
+    )
+
+    FEED_META_LOAD_DETAILS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-030",
+        message="load_details section is invalid.",
+    )
+
+    FEED_META_LOAD_DETAILS_TYPE_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-031",
+        message="load_details.type is mandatory.",
+    )
+
+    FEED_META_LOAD_DETAILS_TYPE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-032",
+        message=(
+            "load_details.type must be one of FULL_LOAD, "
+            "INCREMENTAL_CDC, APPEND_LOAD, or SCD_TYPE_2."
+        ),
+    )
+
+    # ---------------------------------------------------------
+    # Source and target
+    # ---------------------------------------------------------
+
+    SOURCE_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-033",
+        message="source section is missing.",
+    )
+
+    SOURCE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-034",
+        message="source section is invalid.",
+    )
+
+    SOURCE_FIELD_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-035",
+        message="A mandatory source field is missing or blank.",
+    )
+
+    TARGET_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-036",
+        message="target section is missing.",
+    )
+
+    TARGET_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-037",
+        message="target section is invalid.",
+    )
+
+    TARGET_FIELD_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-038",
+        message="A mandatory target field is missing or blank.",
+    )
+
+    # ---------------------------------------------------------
+    # Feed specifications
+    # ---------------------------------------------------------
+
+    FEED_SPECS_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-039",
+        message="feed_specs section is missing.",
+    )
+
+    FEED_SPECS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-040",
+        message="feed_specs section is invalid.",
+    )
+
+    FEED_SPECS_PRIMARY_KEY_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-041",
+        message="feed_specs.primary_key is mandatory.",
+    )
+
+    FEED_SPECS_COLUMN_LIST_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-042",
+        message="Feed specification column list must be a non-empty list of non-blank strings.",
+    )
+
+    FEED_SPECS_OPTIMIZE_COMMAND_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-043",
+        message="feed_specs.optimize_command must be a mapping.",
+    )
+
+    FEED_SPECS_OPTIMIZE_ENABLED_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-044",
+        message="feed_specs.optimize_command.enabled must be a boolean.",
+    )
+
+    FEED_SPECS_OPTIMIZE_WHERE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-045",
+        message="feed_specs.optimize_command.where must be a non-empty mapping of column names to values.",
+    )
+
+    FEED_SPECS_ZORDER_BY_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-046",
+        message="feed_specs.optimize_command.zorder_by must be a non-empty list of column names.",
+    )
+
+    FEED_SPECS_CUSTOM_SELECTION_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-047",
+        message="feed_specs.custom_selection must be a mapping.",
+    )
+
+    FEED_SPECS_CUSTOM_SELECTION_ENABLED_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-048",
+        message="feed_specs.custom_selection.enabled must be a boolean.",
+    )
+
+    FEED_SPECS_CUSTOM_SELECTION_SQL_FILE_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-049",
+        message="feed_specs.custom_selection.sql_file is mandatory when custom selection is enabled.",
+    )
+
+    FEED_SPECS_ENFORCE_SCHEMA_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-050",
+        message="feed_specs.enforce_schema must be a mapping.",
+    )
+
+    FEED_SPECS_ENFORCE_SCHEMA_TYPE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-051",
+        message="feed_specs.enforce_schema.type must be 'struct'.",
+    )
+
+    FEED_SPECS_ENFORCE_SCHEMA_FIELDS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-052",
+        message="feed_specs.enforce_schema.fields must be a non-empty list.",
+    )
+
+    FEED_SPECS_SCHEMA_FIELD_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-053",
+        message="Each enforce_schema field must be a mapping.",
+    )
+
+    FEED_SPECS_SCHEMA_FIELD_NAME_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-054",
+        message="Each enforce_schema field must have a non-blank name.",
+    )
+
+    FEED_SPECS_SCHEMA_FIELD_TYPE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-055",
+        message="Each enforce_schema field must have a valid Spark data type.",
+    )
+
+    FEED_SPECS_SCHEMA_FIELD_NULLABLE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-056",
+        message="Each enforce_schema field nullable value must be true or false.",
+    )
+
+    FEED_SPECS_SCHEMA_FIELD_METADATA_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-057",
+        message="Each enforce_schema field metadata must be a mapping.",
+    )

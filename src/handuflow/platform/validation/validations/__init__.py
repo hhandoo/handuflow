@@ -7,13 +7,19 @@ from ..base import Validation
 # from .directory_structure_validation import DirectoryStructureValidation
 # from .feed_configuration_validation import FeedConfigurationValidation
 from .enforce_HFdir_structure import EnforceHFDirStructure
-from .HF_config_validation import HFConfigValidation
-from .validate_feed_meta import FeedMetaValidation
+from .enforce_master_config import EnforceMasterConfig
+from .enforce_feed_meta import EnforceFeedMeta
+from .enforce_load_details import EnforceLoadDetails
+from .enforce_source_and_target import EnforceSourceAndTarget
+from .enforce_feed_specs import EnforceFeedSpecs
 
 VALIDATIONS: list[Validation] = [
     EnforceHFDirStructure(),
-    HFConfigValidation(),
-    FeedMetaValidation(),
+    EnforceMasterConfig(),
+    EnforceFeedMeta(),
+    EnforceLoadDetails(),
+    EnforceSourceAndTarget(),
+    EnforceFeedSpecs(),
 ]
 
 __all__ = [

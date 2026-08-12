@@ -37,8 +37,8 @@ feed_specs:
       - customer_id
       - order_date
   custom_selection:
-    - enabled: true
-    - sql_file: test.sql
+    enabled: true
+    sql_file: test.sql
   enforce_schema:
     type: struct
     fields:

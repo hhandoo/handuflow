@@ -30,7 +30,7 @@ SYSTEM_NAME_PATTERN = re.compile(
 )
 
 
-class HFConfigValidation(Validation):
+class EnforceMasterConfig(Validation):
     """Validate the contents of the HanduFLOW config.ini file."""
 
     @property

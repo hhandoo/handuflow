@@ -21,12 +21,12 @@ MIN_VACUUM_HOURS = 168
 MAX_VACUUM_HOURS = 26280
 
 
-class FeedMetaValidation(Validation):
+class EnforceFeedMeta(Validation):
     """Validate feed_meta in HanduFLOW feed configuration files."""
 
     @property
     def name(self) -> str:
-        return "feed_meta_validation"
+        return "Enforce Feed Meta"
 
     @property
     def key(self) -> int:
