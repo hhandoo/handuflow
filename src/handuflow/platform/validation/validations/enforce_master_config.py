@@ -7,23 +7,23 @@ import logging
 import re
 
 from ...configurator.dataclasses.context import ConfigurationContext
+from ...exceptions.definition import ErrorDefinition
 from ...exceptions.domains.validation import ValidationError
 from ...exceptions.errors.validation import ValidationErrors
 from ...storage import StoragePath
 from ...storage.base import StorageProvider
 from ..base import Validation
 from ..dataclasses import ValidationResult
-from ...exceptions.definition import ErrorDefinition
+from ._common import CONFIGURATION_FILE
 
-CONFIGURATION_FILE = "config.ini"
-
-DEFAULT_SECTION = "DEFAULT"
 LOGGING_SECTION = "LOGGING"
 
-LOGGING_TYPE_OPTIONS = {
-    "standard",
-    "rotating",
-}
+LOGGING_TYPE_OPTIONS = frozenset(
+    {
+        "standard",
+        "rotating",
+    }
+)
 
 SYSTEM_NAME_PATTERN = re.compile(
     r"^[A-Za-z0-9]+$",
@@ -46,56 +46,57 @@ class EnforceMasterConfig(Validation):
         configuration_context: ConfigurationContext,
     ) -> ValidationResult:
         """Validate the HanduFLOW configuration."""
+
         logger = configuration_context.logging.logger
         provider = configuration_context.storage_manager.provider
         root = configuration_context.storage_path
         config_path = StoragePath(
             f"{root.uri}/{CONFIGURATION_FILE}",
         )
+
         logger.info(
             "Starting config.ini validation for %s",
             config_path.uri,
         )
+
         try:
             parser = self.__load_configuration(
                 provider,
                 config_path,
                 logger,
             )
+
             self.__validate_default_section(
                 parser,
                 logger,
             )
+
             self.__validate_logging_section(
                 parser,
                 logger,
             )
+
         except ValidationError as exc:
             logger.warning(
                 "Configuration validation failed: %s",
                 exc,
             )
-            return ValidationResult(
-                self.key,
-                self.name,
-                False,
-                str(exc),
-            )
-        except Exception:
+            raise
+
+        except Exception as exc:
             logger.exception(
                 "Unexpected error during config.ini validation.",
             )
-            error = ValidationError(
+
+            raise ValidationError(
                 ValidationErrors.VALIDATION_UNKNOWN,
-            )
-            return ValidationResult(
-                self.key,
-                self.name,
-                False,
-                str(error),
-            )
+                cause=exc,
+            ) from exc
+
         message = "HanduFLOW configuration is valid."
+
         logger.info(message)
+
         return ValidationResult(
             self.key,
             self.name,
@@ -110,16 +111,19 @@ class EnforceMasterConfig(Validation):
         logger: logging.Logger,
     ) -> configparser.ConfigParser:
         """Read and parse config.ini."""
+
         if not provider.exists(config_path):
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_FILE_MISSING,
             )
+
         if provider.is_directory(config_path):
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_FILE_NOT_FILE,
             )
+
         try:
-            content: str = self._read_text(
+            content = self._read_text(
                 provider,
                 config_path,
             )
@@ -128,18 +132,23 @@ class EnforceMasterConfig(Validation):
                 "Configuration file is not valid UTF-8: %s",
                 config_path.uri,
             )
+
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_FILE_INVALID_ENCODING,
             )
+
         except OSError:
             logger.exception(
                 "Failed to read configuration file: %s",
                 config_path.uri,
             )
+
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_FILE_READ_FAILED,
             )
+
         parser = configparser.ConfigParser(interpolation=None)
+
         try:
             parser.read_string(content)
         except configparser.Error:
@@ -147,9 +156,11 @@ class EnforceMasterConfig(Validation):
                 "Configuration file contains invalid INI syntax: %s",
                 config_path.uri,
             )
+
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_FILE_INVALID_INI,
             )
+
         return parser
 
     def __validate_default_section(
@@ -158,26 +169,31 @@ class EnforceMasterConfig(Validation):
         logger: logging.Logger,
     ) -> None:
         """Validate the DEFAULT section."""
+
         system_name = self.__get_required_value(
             parser["DEFAULT"],
             "system_name",
             ValidationErrors.CONFIGURATION_SYSTEM_NAME_MISSING,
             logger,
         )
+
         if not SYSTEM_NAME_PATTERN.fullmatch(system_name):
             logger.warning(
-                "system_name must contain only alphanumeric " "characters: %s",
+                "system_name must contain only alphanumeric characters: %s",
                 system_name,
             )
+
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_SYSTEM_NAME_INVALID,
             )
+
         self.__get_required_value(
             parser["DEFAULT"],
             "environment",
             ValidationErrors.CONFIGURATION_ENVIRONMENT_MISSING,
             logger,
         )
+
         logger.info(
             "DEFAULT configuration is valid.",
         )
@@ -188,6 +204,7 @@ class EnforceMasterConfig(Validation):
         logger: logging.Logger,
     ) -> None:
         """Validate the LOGGING section."""
+
         if not parser.has_section(LOGGING_SECTION):
             logger.warning(
                 "LOGGING section is missing.",
@@ -196,14 +213,16 @@ class EnforceMasterConfig(Validation):
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_LOGGING_TYPE_MISSING,
             )
+
         logging_config = parser[LOGGING_SECTION]
+
         logging_type = self.__get_required_value(
             logging_config,
             "type",
             ValidationErrors.CONFIGURATION_LOGGING_TYPE_MISSING,
             logger,
-        )
-        logging_type = logging_type.lower()
+        ).lower()
+
         if logging_type not in LOGGING_TYPE_OPTIONS:
             logger.warning(
                 "Invalid logging type: %s",
@@ -213,69 +232,52 @@ class EnforceMasterConfig(Validation):
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_LOGGING_TYPE_INVALID,
             )
-        log_format = self.__get_optional_value(
-            logging_config,
-            "log_format",
-        )
 
-        if log_format is not None:
+        if self.__get_optional_value(logging_config, "log_format") is not None:
             logger.info(
                 "Custom log format configured.",
             )
+
         self.__get_required_value(
             logging_config,
             "log_directory_name",
             ValidationErrors.CONFIGURATION_LOG_DIRECTORY_MISSING,
             logger,
         )
+
         self.__get_required_value(
             logging_config,
             "log_file_name",
             ValidationErrors.CONFIGURATION_LOG_FILE_MISSING,
             logger,
         )
-        backup_count = self.__get_optional_value(
-            logging_config,
-            "backup_count",
-        )
 
-        if backup_count is not None:
-            self.__validate_integer(
-                backup_count,
-                "backup_count",
-                logger,
+        for field_name in ("backup_count", "max_bytes", "log_retention_days"):
+            value = self.__get_optional_value(
+                logging_config,
+                field_name,
             )
-        max_bytes = self.__get_optional_value(
-            logging_config,
-            "max_bytes",
-        )
-        if max_bytes is not None:
-            self.__validate_integer(
-                max_bytes,
-                "max_bytes",
-                logger,
-            )
+
+            if value is not None:
+                self.__validate_integer(
+                    value,
+                    field_name,
+                    logger,
+                )
+
         default_log_level = self.__get_required_value(
             logging_config,
             "default_log_level",
             ValidationErrors.CONFIGURATION_DEFAULT_LOG_LEVEL_MISSING,
             logger,
         )
+
         self.__validate_integer(
             default_log_level,
             "default_log_level",
             logger,
         )
-        log_retention_days = self.__get_optional_value(
-            logging_config,
-            "log_retention_days",
-        )
-        if log_retention_days is not None:
-            self.__validate_integer(
-                log_retention_days,
-                "log_retention_days",
-                logger,
-            )
+
         logger.info(
             "LOGGING configuration is valid.",
         )
@@ -286,15 +288,20 @@ class EnforceMasterConfig(Validation):
         key: str,
     ) -> str | None:
         """Return an optional configuration value."""
+
         value = section.get(
             key,
             fallback=None,
         )
+
         if value is None:
             return None
+
         value = value.strip()
+
         if not value:
             return None
+
         return value
 
     def __get_required_value(
@@ -305,16 +312,20 @@ class EnforceMasterConfig(Validation):
         logger: logging.Logger,
     ) -> str:
         """Return a required configuration value."""
+
         value = self.__get_optional_value(
             section,
             key,
         )
+
         if value is not None:
             return value
+
         logger.warning(
             "Required configuration value is missing: %s",
             key,
         )
+
         self._raise_validation_error(error)
 
     def __validate_integer(
@@ -324,6 +335,7 @@ class EnforceMasterConfig(Validation):
         logger: logging.Logger,
     ) -> None:
         """Validate an integer configuration value."""
+
         try:
             int(value)
         except ValueError:
@@ -332,6 +344,7 @@ class EnforceMasterConfig(Validation):
                 field_name,
                 value,
             )
+
             self._raise_validation_error(
                 ValidationErrors.CONFIGURATION_VALUE_INVALID,
             )

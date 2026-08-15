@@ -1,0 +1,30 @@
+feed_meta:
+  unique_identifier: "empty_list_dependencies_feed"
+  vacuum_hours: 168
+
+load_details:
+  type: "FULL_LOAD"
+
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee_target"
+
+feed_specs:
+  primary_key: "id"
+
+data_quality_checks:
+  - check_group_identifier: "group_empty_deps"
+    description: "Check with empty dependency_datasets list"
+    run_type: "PRE_LOAD"
+    dependency_datasets: []
+    column: "event_ts"
+    checks:
+      - name: "null_check"

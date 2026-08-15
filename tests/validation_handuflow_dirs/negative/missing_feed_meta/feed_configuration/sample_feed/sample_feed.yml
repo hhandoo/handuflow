@@ -1,0 +1,22 @@
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee_target"
+
+feed_specs:
+  primary_key: "id"
+
+data_quality_checks:
+  - check_group_identifier: "group_1"
+    description: "Null check on event_ts"
+    run_type: "PRE_LOAD"
+    column: "event_ts"
+    checks:
+      - name: "null_check"
