@@ -12,6 +12,7 @@ from .enforce_feed_meta import EnforceFeedMeta
 from .enforce_load_details import EnforceLoadDetails
 from .enforce_source_and_target import EnforceSourceAndTarget
 from .enforce_feed_specs import EnforceFeedSpecs
+from .enforce_data_quality_checks import EnforceDataQualityChecks
 
 VALIDATIONS: list[Validation] = [
     EnforceHFDirStructure(),
@@ -20,6 +21,7 @@ VALIDATIONS: list[Validation] = [
     EnforceLoadDetails(),
     EnforceSourceAndTarget(),
     EnforceFeedSpecs(),
+    EnforceDataQualityChecks(),
 ]
 
 __all__ = [

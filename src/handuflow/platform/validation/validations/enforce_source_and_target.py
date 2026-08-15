@@ -122,10 +122,6 @@ class EnforceSourceAndTarget(Validation):
             message,
         )
 
-    # =========================================================
-    # YAML file validation
-    # =========================================================
-
     def __validate_file(
         self,
         provider: StorageProvider,
@@ -167,10 +163,6 @@ class EnforceSourceAndTarget(Validation):
                 ValidationErrors.FEED_CONFIGURATION_INVALID_YML,
             )
 
-        # -----------------------------------------------------
-        # Root must be a mapping
-        # -----------------------------------------------------
-
         if not isinstance(data, dict):
             logger.warning(
                 "YAML root must be a mapping: %s",
@@ -185,10 +177,6 @@ class EnforceSourceAndTarget(Validation):
             dict[str, Any],
             data,
         )
-
-        # -----------------------------------------------------
-        # Source
-        # -----------------------------------------------------
 
         source = data.get("source")
 
@@ -223,10 +211,6 @@ class EnforceSourceAndTarget(Validation):
             yml_file,
             logger,
         )
-
-        # -----------------------------------------------------
-        # Target
-        # -----------------------------------------------------
 
         target = data.get("target")
 
@@ -266,10 +250,6 @@ class EnforceSourceAndTarget(Validation):
             "Source and target are valid: %s",
             yml_file.uri,
         )
-
-    # =========================================================
-    # Source / Target section
-    # =========================================================
 
     def __validate_section(
         self,
@@ -311,10 +291,6 @@ class EnforceSourceAndTarget(Validation):
             yml_file,
             logger,
         )
-
-    # =========================================================
-    # Source / Target fields
-    # =========================================================
 
     def __validate_field(
         self,

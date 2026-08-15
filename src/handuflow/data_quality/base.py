@@ -24,8 +24,8 @@ class BaseDataQualityCheck(ABC):
         current_check_name: str,
         check_range: dict[str, int | float | str] | None,
         spark_timestamp_format: str | None,
-        sql_query_pass: str | None,
-        sql_query_fail: str | None,
+        sql_query_full_dataset: str | None,
+        sql_query_fail_dataset: str | None,
         threshold: float | None,
         context: ConfigurationContext,
     ) -> None:
@@ -34,8 +34,8 @@ class BaseDataQualityCheck(ABC):
         self.current_check_name = current_check_name
         self.check_range = check_range
         self.spark_timestamp_format = spark_timestamp_format
-        self.sql_query_pass = sql_query_pass
-        self.sql_query_fail = sql_query_fail
+        self.sql_query_full_dataset = sql_query_full_dataset
+        self.sql_query_fail_dataset = sql_query_fail_dataset
         self.threshold = threshold
 
     @property
@@ -175,7 +175,10 @@ class BaseDataQualityCheck(ABC):
 
     def _generate_positive_test_table_df_by_query(self) -> DataFrame:
 
-        if not isinstance(self.sql_query_pass, str) or not self.sql_query_pass:
+        if (
+            not isinstance(self.sql_query_full_dataset, str)
+            or not self.sql_query_full_dataset
+        ):
             self._raise_data_quality_error(
                 self._logger,
                 DataQualityErrors.SQL_QUERY_ERROR,
@@ -183,7 +186,7 @@ class BaseDataQualityCheck(ABC):
             )
 
         try:
-            return self._spark.sql(sqlQuery=self.sql_query_pass)  # type: ignore
+            return self._spark.sql(sqlQuery=self.sql_query_full_dataset)  # type: ignore
         except Exception as exc:
             self._raise_data_quality_error(
                 self._logger,
@@ -194,7 +197,10 @@ class BaseDataQualityCheck(ABC):
 
     def _generate_negative_test_table_df_by_query(self) -> DataFrame:
 
-        if not isinstance(self.sql_query_fail, str) or not self.sql_query_fail:
+        if (
+            not isinstance(self.sql_query_fail_dataset, str)
+            or not self.sql_query_fail_dataset
+        ):
             self._raise_data_quality_error(
                 self._logger,
                 DataQualityErrors.SQL_QUERY_ERROR,
@@ -202,7 +208,7 @@ class BaseDataQualityCheck(ABC):
             )
 
         try:
-            return self._spark.sql(sqlQuery=self.sql_query_fail)  # type: ignore
+            return self._spark.sql(sqlQuery=self.sql_query_fail_dataset)  # type: ignore
         except Exception as exc:
             self._raise_data_quality_error(
                 self._logger,

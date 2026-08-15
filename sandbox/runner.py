@@ -1,4 +1,5 @@
-# import os
+import os
+
 # os.environ["HADOOP_HOME"] = r"C:\hadoop-3.3.6"
 # os.environ["PATH"] = r"C:\hadoop-3.3.6\bin;" + os.environ["PATH"]
 
@@ -110,8 +111,8 @@ df.write.mode("append").insertInto("demo.employee", overwrite=True)
 #     print(r)
 
 # orchestrator = Orchestrator(spark, r"C:\Users\hando\PycharmProjects\handuflow\sandbox\handuflow_dir")
-orchestrator = Orchestrator(
-    spark, r"/home/handu/Documents/dev/handuflow/sandbox/handuflow_dir"
-)
+
+dir_path = os.path.dirname(__file__)
+orchestrator = Orchestrator(spark, os.path.join(dir_path, "handuflow_dir"))
 
 orchestrator.run()

@@ -329,3 +329,215 @@ class ValidationErrors:
         code="HF-VALIDATION-057",
         message="Each enforce_schema field metadata must be a mapping.",
     )
+
+    # ---------------------------------------------------------
+    # Data quality checks
+    # ---------------------------------------------------------
+
+    DATA_QUALITY_CHECKS_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-029",
+        message="data_quality_checks section is missing.",
+    )
+
+    DATA_QUALITY_CHECKS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-030",
+        message="data_quality_checks must be a non-empty list.",
+    )
+
+    DATA_QUALITY_CHECK_GROUP_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-031",
+        message="Data quality check group must be a mapping.",
+    )
+
+    DATA_QUALITY_CHECK_GROUP_IDENTIFIER_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-032",
+        message="check_group_identifier is mandatory.",
+    )
+
+    DATA_QUALITY_CHECK_GROUP_IDENTIFIER_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-033",
+        message="check_group_identifier must be a non-blank string.",
+    )
+
+    DATA_QUALITY_CHECK_GROUP_IDENTIFIER_DUPLICATE = ErrorDefinition(
+        code="HF-VALIDATION-034",
+        message="check_group_identifier must be unique.",
+    )
+
+    DATA_QUALITY_CHECK_DESCRIPTION_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-035",
+        message="description is mandatory.",
+    )
+
+    DATA_QUALITY_CHECK_DESCRIPTION_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-036",
+        message="description must be a non-blank string.",
+    )
+
+    DATA_QUALITY_CHECK_RUN_TYPE_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-037",
+        message="run_type is mandatory.",
+    )
+
+    DATA_QUALITY_CHECK_RUN_TYPE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-038",
+        message="run_type must be either PRE_LOAD or POST_LOAD.",
+    )
+
+    DATA_QUALITY_DEPENDENCY_DATASETS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-039",
+        message="dependency_datasets must be a list of non-blank strings.",
+    )
+
+    DATA_QUALITY_CHECK_COLUMN_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-040",
+        message="column is mandatory.",
+    )
+
+    DATA_QUALITY_CHECK_COLUMN_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-041",
+        message="column must be a non-blank string.",
+    )
+
+    DATA_QUALITY_CHECKS_LIST_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-042",
+        message="checks is mandatory.",
+    )
+
+    DATA_QUALITY_CHECKS_LIST_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-043",
+        message="checks must be a non-empty list.",
+    )
+
+    DATA_QUALITY_CHECK_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-044",
+        message="Data quality check must be a mapping.",
+    )
+
+    DATA_QUALITY_CHECK_NAME_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-045",
+        message="Data quality check name is mandatory.",
+    )
+
+    DATA_QUALITY_CHECK_NAME_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-046",
+        message=(
+            "Data quality check name must be one of: "
+            "range_check, duplicate_check, not_blank_check, "
+            "null_check, custom_check."
+        ),
+    )
+
+    DATA_QUALITY_CHECK_PARAMETER_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-047",
+        message="Data quality check contains an unsupported parameter.",
+    )
+
+    # ---------------------------------------------------------
+    # Range check
+    # ---------------------------------------------------------
+
+    DATA_QUALITY_RANGE_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-048",
+        message="range is mandatory for range_check.",
+    )
+
+    DATA_QUALITY_RANGE_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-049",
+        message="range must be a mapping.",
+    )
+
+    DATA_QUALITY_RANGE_FROM_INC_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-050",
+        message="range.from_inc is mandatory.",
+    )
+
+    DATA_QUALITY_RANGE_FROM_INC_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-051",
+        message="range.from_inc must be a non-blank string.",
+    )
+
+    DATA_QUALITY_RANGE_TO_EXC_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-052",
+        message="range.to_exc is mandatory.",
+    )
+
+    DATA_QUALITY_RANGE_TO_EXC_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-053",
+        message="range.to_exc must be a non-blank string.",
+    )
+
+    DATA_QUALITY_RANGE_TIMESTAMP_FORMAT_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-054",
+        message=(
+            "range.spark_timestamp_format is mandatory when "
+            "range values are dates or timestamps."
+        ),
+    )
+
+    DATA_QUALITY_RANGE_TIMESTAMP_FORMAT_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-055",
+        message="range.spark_timestamp_format must be a non-blank string.",
+    )
+
+    # ---------------------------------------------------------
+    # Threshold
+    # ---------------------------------------------------------
+
+    DATA_QUALITY_THRESHOLD_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-056",
+        message="threshold must be a numeric value.",
+    )
+
+    DATA_QUALITY_THRESHOLD_OUT_OF_RANGE = ErrorDefinition(
+        code="HF-VALIDATION-057",
+        message="threshold must be greater than or equal to 0 and less than 1.",
+    )
+
+    # ---------------------------------------------------------
+    # Custom check
+    # ---------------------------------------------------------
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_PASS_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-058",
+        message="sql_query_pass is mandatory for custom_check.",
+    )
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_PASS_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-059",
+        message="sql_query_pass must be a non-blank string.",
+    )
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_FAIL_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-060",
+        message="sql_query_fail is mandatory for custom_check.",
+    )
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_FAIL_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-061",
+        message="sql_query_fail must be a non-blank string.",
+    )
+
+    # ---------------------------------------------------------
+    # Custom check
+    # ---------------------------------------------------------
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_FULL_DATASET_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-058",
+        message="sql_query_full_dataset is mandatory for custom_check.",
+    )
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_FULL_DATASET_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-059",
+        message="sql_query_full_dataset must be a non-blank string.",
+    )
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_FAIL_DATASET_MISSING = ErrorDefinition(
+        code="HF-VALIDATION-060",
+        message="sql_query_fail_dataset is mandatory for custom_check.",
+    )
+
+    DATA_QUALITY_CUSTOM_SQL_QUERY_FAIL_DATASET_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-061",
+        message="sql_query_fail_dataset must be a non-blank string.",
+    )

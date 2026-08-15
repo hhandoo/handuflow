@@ -129,10 +129,6 @@ class EnforceLoadDetails(Validation):
             message,
         )
 
-    # =========================================================
-    # YAML file validation
-    # =========================================================
-
     def __validate_file(
         self,
         provider: StorageProvider,
@@ -193,10 +189,6 @@ class EnforceLoadDetails(Validation):
             data,
         )
 
-        # -----------------------------------------------------
-        # load_details must exist
-        # -----------------------------------------------------
-
         load_details = data.get("load_details")
 
         if load_details is None:
@@ -234,10 +226,6 @@ class EnforceLoadDetails(Validation):
             "Load details are valid: %s",
             yml_file.uri,
         )
-
-    # =========================================================
-    # load_details.type
-    # =========================================================
 
     def __validate_type(
         self,

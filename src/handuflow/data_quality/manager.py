@@ -142,8 +142,12 @@ class DataQualityManager:
                             spark_timestamp_format=raw_check.get(
                                 "spark_timestamp_format", None
                             ),
-                            sql_query_pass=raw_check.get("sql_query_pass", None),
-                            sql_query_fail=raw_check.get("sql_query_fail", None),
+                            sql_query_full_dataset=raw_check.get(
+                                "sql_query_full_dataset", None
+                            ),
+                            sql_query_fail_dataset=raw_check.get(
+                                "sql_query_fail_dataset", None
+                            ),
                             threshold=raw_check.get("threshold", None),
                         )
                     )
@@ -259,8 +263,8 @@ class DataQualityManager:
                         check.name,
                         check.check_range,
                         check.spark_timestamp_format,
-                        check.sql_query_pass,
-                        check.sql_query_fail,
+                        check.sql_query_full_dataset,
+                        check.sql_query_fail_dataset,
                         check.threshold,
                         self.config_context,
                     )

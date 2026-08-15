@@ -153,10 +153,6 @@ class EnforceFeedSpecs(Validation):
             message,
         )
 
-    # =========================================================
-    # YAML file validation
-    # =========================================================
-
     def __validate_file(
         self,
         provider: StorageProvider,
@@ -169,48 +165,32 @@ class EnforceFeedSpecs(Validation):
             "Validating feed specifications: %s",
             yml_file.uri,
         )
-
         try:
             content = self._read_text(
                 provider,
                 yml_file,
             )
-
             data: object = yaml.safe_load(content)
-
         except UnicodeDecodeError:
             logger.warning(
                 "YAML file is not valid UTF-8: %s",
                 yml_file.uri,
             )
-
             self._raise_validation_error(
                 ValidationErrors.FEED_CONFIGURATION_YML_MISSING,
             )
-
         except yaml.YAMLError:
             logger.warning(
                 "Invalid YAML file: %s",
                 yml_file.uri,
             )
-
             self._raise_validation_error(
                 ValidationErrors.FEED_CONFIGURATION_INVALID_YML,
             )
-
-        # -----------------------------------------------------
-        # Root must be a mapping
-        # -----------------------------------------------------
-
         root_data = self.__require_mapping(
             data,
             ValidationErrors.FEED_CONFIGURATION_INVALID_YML,
         )
-
-        # -----------------------------------------------------
-        # feed_specs
-        # -----------------------------------------------------
-
         if "feed_specs" not in root_data:
             logger.warning(
                 "feed_specs section is missing: %s",
@@ -227,21 +207,11 @@ class EnforceFeedSpecs(Validation):
             feed_specs_value,
             ValidationErrors.FEED_SPECS_INVALID,
         )
-
-        # -----------------------------------------------------
-        # primary_key
-        # -----------------------------------------------------
-
         self.__validate_primary_key(
             feed_specs,
             yml_file,
             logger,
         )
-
-        # -----------------------------------------------------
-        # composite_key
-        # -----------------------------------------------------
-
         if "composite_key" in feed_specs:
             self.__validate_column_list(
                 feed_specs["composite_key"],
@@ -249,11 +219,6 @@ class EnforceFeedSpecs(Validation):
                 yml_file,
                 logger,
             )
-
-        # -----------------------------------------------------
-        # partition_columns
-        # -----------------------------------------------------
-
         if "partition_columns" in feed_specs:
             self.__validate_column_list(
                 feed_specs["partition_columns"],
@@ -261,33 +226,18 @@ class EnforceFeedSpecs(Validation):
                 yml_file,
                 logger,
             )
-
-        # -----------------------------------------------------
-        # optimize_command
-        # -----------------------------------------------------
-
         if "optimize_command" in feed_specs:
             self.__validate_optimize_command(
                 feed_specs["optimize_command"],
                 yml_file,
                 logger,
             )
-
-        # -----------------------------------------------------
-        # custom_selection
-        # -----------------------------------------------------
-
         if "custom_selection" in feed_specs:
             self.__validate_custom_selection(
                 feed_specs["custom_selection"],
                 yml_file,
                 logger,
             )
-
-        # -----------------------------------------------------
-        # enforce_schema
-        # -----------------------------------------------------
-
         if "enforce_schema" in feed_specs:
             self.__validate_enforce_schema(
                 feed_specs["enforce_schema"],
@@ -299,10 +249,6 @@ class EnforceFeedSpecs(Validation):
             "Feed specifications are valid: %s",
             yml_file.uri,
         )
-
-    # =========================================================
-    # primary_key
-    # =========================================================
 
     def __validate_primary_key(
         self,
@@ -333,10 +279,6 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_PRIMARY_KEY_MISSING,
             )
-
-    # =========================================================
-    # Column list
-    # =========================================================
 
     def __validate_column_list(
         self,
@@ -396,10 +338,6 @@ class EnforceFeedSpecs(Validation):
                     ValidationErrors.FEED_SPECS_COLUMN_LIST_INVALID,
                 )
 
-    # =========================================================
-    # optimize_command
-    # =========================================================
-
     def __validate_optimize_command(
         self,
         value: object,
@@ -412,11 +350,6 @@ class EnforceFeedSpecs(Validation):
             value,
             ValidationErrors.FEED_SPECS_OPTIMIZE_COMMAND_INVALID,
         )
-
-        # -----------------------------------------------------
-        # enabled
-        # -----------------------------------------------------
-
         if "enabled" not in optimize_command:
             logger.warning(
                 "feed_specs.optimize_command.enabled is missing: %s",
@@ -438,32 +371,18 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_OPTIMIZE_ENABLED_INVALID,
             )
-
-        # -----------------------------------------------------
-        # where
-        # -----------------------------------------------------
-
         if "where" in optimize_command:
             self.__validate_where(
                 optimize_command["where"],
                 yml_file,
                 logger,
             )
-
-        # -----------------------------------------------------
-        # zorder_by
-        # -----------------------------------------------------
-
         if "zorder_by" in optimize_command:
             self.__validate_zorder_by(
                 optimize_command["zorder_by"],
                 yml_file,
                 logger,
             )
-
-    # =========================================================
-    # optimize where
-    # =========================================================
 
     def __validate_where(
         self,
@@ -505,10 +424,6 @@ class EnforceFeedSpecs(Validation):
                 self._raise_validation_error(
                     ValidationErrors.FEED_SPECS_OPTIMIZE_WHERE_INVALID,
                 )
-
-    # =========================================================
-    # zorder_by
-    # =========================================================
 
     def __validate_zorder_by(
         self,
@@ -563,10 +478,6 @@ class EnforceFeedSpecs(Validation):
                     ValidationErrors.FEED_SPECS_ZORDER_BY_INVALID,
                 )
 
-    # =========================================================
-    # custom_selection
-    # =========================================================
-
     def __validate_custom_selection(
         self,
         value: object,
@@ -579,11 +490,6 @@ class EnforceFeedSpecs(Validation):
             value,
             ValidationErrors.FEED_SPECS_CUSTOM_SELECTION_INVALID,
         )
-
-        # -----------------------------------------------------
-        # enabled
-        # -----------------------------------------------------
-
         if "enabled" not in custom_selection:
             logger.warning(
                 "feed_specs.custom_selection.enabled is missing: %s",
@@ -605,11 +511,6 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_CUSTOM_SELECTION_ENABLED_INVALID,
             )
-
-        # -----------------------------------------------------
-        # sql_file
-        # -----------------------------------------------------
-
         if enabled:
             if "sql_file" not in custom_selection:
                 logger.warning(
@@ -643,10 +544,6 @@ class EnforceFeedSpecs(Validation):
                     ValidationErrors.FEED_SPECS_CUSTOM_SELECTION_SQL_FILE_MISSING,
                 )
 
-    # =========================================================
-    # enforce_schema
-    # =========================================================
-
     def __validate_enforce_schema(
         self,
         value: object,
@@ -659,11 +556,6 @@ class EnforceFeedSpecs(Validation):
             value,
             ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_INVALID,
         )
-
-        # -----------------------------------------------------
-        # type
-        # -----------------------------------------------------
-
         if "type" not in enforce_schema:
             logger.warning(
                 "feed_specs.enforce_schema.type is missing: %s",
@@ -673,33 +565,23 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_TYPE_INVALID,
             )
-
         schema_type = enforce_schema["type"]
-
         if not isinstance(schema_type, str):
             logger.warning(
                 "feed_specs.enforce_schema.type " "must be a string: %s",
                 yml_file.uri,
             )
-
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_TYPE_INVALID,
             )
-
         if schema_type != "struct":
             logger.warning(
                 "feed_specs.enforce_schema.type " "must be 'struct': %s",
                 yml_file.uri,
             )
-
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_TYPE_INVALID,
             )
-
-        # -----------------------------------------------------
-        # fields
-        # -----------------------------------------------------
-
         if "fields" not in enforce_schema:
             logger.warning(
                 "feed_specs.enforce_schema.fields is missing: %s",
@@ -709,21 +591,16 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_FIELDS_INVALID,
             )
-
         fields_value = enforce_schema["fields"]
-
         if not isinstance(fields_value, list):
             logger.warning(
                 "feed_specs.enforce_schema.fields " "must be a list: %s",
                 yml_file.uri,
             )
-
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_FIELDS_INVALID,
             )
-
         fields: list[object] = cast(list[object], fields_value)
-
         if not fields:
             logger.warning(
                 "feed_specs.enforce_schema.fields " "cannot be empty: %s",
@@ -733,17 +610,12 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_ENFORCE_SCHEMA_FIELDS_INVALID,
             )
-
         for field_value in fields:
             self.__validate_schema_field(
                 field_value,
                 yml_file,
                 logger,
             )
-
-    # =========================================================
-    # Schema field
-    # =========================================================
 
     def __validate_schema_field(
         self,
@@ -757,11 +629,6 @@ class EnforceFeedSpecs(Validation):
             value,
             ValidationErrors.FEED_SPECS_SCHEMA_FIELD_INVALID,
         )
-
-        # -----------------------------------------------------
-        # name
-        # -----------------------------------------------------
-
         if "name" not in field:
             logger.warning(
                 "Schema field name is missing: %s",
@@ -793,10 +660,6 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_SCHEMA_FIELD_NAME_MISSING,
             )
-
-        # -----------------------------------------------------
-        # type
-        # -----------------------------------------------------
 
         if "type" not in field:
             logger.warning(
@@ -831,10 +694,6 @@ class EnforceFeedSpecs(Validation):
                 ValidationErrors.FEED_SPECS_SCHEMA_FIELD_TYPE_INVALID,
             )
 
-        # -----------------------------------------------------
-        # nullable
-        # -----------------------------------------------------
-
         if "nullable" not in field:
             logger.warning(
                 "Schema field nullable is missing: %s",
@@ -856,10 +715,6 @@ class EnforceFeedSpecs(Validation):
             self._raise_validation_error(
                 ValidationErrors.FEED_SPECS_SCHEMA_FIELD_NULLABLE_INVALID,
             )
-
-        # -----------------------------------------------------
-        # metadata
-        # -----------------------------------------------------
 
         if "metadata" not in field:
             logger.warning(
@@ -889,10 +744,6 @@ class EnforceFeedSpecs(Validation):
         for _ in metadata.keys():
             pass
 
-    # =========================================================
-    # Mapping helper
-    # =========================================================
-
     @staticmethod
     def __require_mapping(
         value: object,
@@ -910,10 +761,6 @@ class EnforceFeedSpecs(Validation):
             result[key] = item
 
         return result
-
-    # =========================================================
-    # Spark data types
-    # =========================================================
 
     @staticmethod
     def __is_valid_schema_type(

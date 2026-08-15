@@ -76,6 +76,6 @@ data_quality_checks:
       - name: not_blank_check
       - name: null_check
       - name: custom_check
-        sql_query_pass: "SELECT * FROM `demo`.`employee`"
-        sql_query_fail: "SELECT * FROM `demo`.`employee` WHERE name IS NULL"
+        sql_query_full_dataset: "SELECT * FROM `demo`.`employee`"
+        sql_query_fail_dataset: "SELECT * FROM `demo`.`employee` WHERE name IS NULL"
         threshold: 0.01
