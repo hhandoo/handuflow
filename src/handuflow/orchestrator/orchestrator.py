@@ -12,6 +12,7 @@ class Orchestrator:
     def __init__(self, spark_session: SparkSession, handu_flow_directory_path: str):
         self.spark_session = spark_session
         self.handu_flow_directory_path = handu_flow_directory_path
+        self.run_id = None
 
     def run(self):
         config_context = self.__get_configuration_context()
@@ -56,6 +57,7 @@ class Orchestrator:
             self.handu_flow_directory_path, self.spark_session
         )
         configuration.configure()
+        self.run_id = configuration.run_id
         return configuration.get_configuration_context()
 
     @staticmethod

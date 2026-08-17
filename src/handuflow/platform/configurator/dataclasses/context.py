@@ -5,6 +5,7 @@ from .logging import LoggingConfiguration
 from .default import DefaultConfiguration
 from .spark import SparkConfiguration
 
+
 @dataclass(frozen=True, slots=True)
 class ConfigurationContext:
     """Runtime context shared across the framework."""
