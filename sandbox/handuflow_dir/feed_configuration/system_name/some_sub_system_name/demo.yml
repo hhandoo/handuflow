@@ -3,6 +3,7 @@ feed_meta:
   upstream_identifier:
   downstream_identifier:
   vacuum_hours: 234
+  batch_key:
 
 load_details:
   type: "FULL_LOAD"

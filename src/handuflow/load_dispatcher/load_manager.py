@@ -16,7 +16,9 @@ from .dataclass.optimize_command import OptimizeCommand
 from .dataclass.custom_selection import CustomSelection
 from .dataclass.enforce_schema import EnforceSchema
 from .dataclass.schema_field import SchemaField
-from .load_dispatcher import LoadDispatcher
+
+# from .load_dispatcher import LoadDispatcher
+from .load_planner import LoadPlanner
 
 
 class LoadManager:
@@ -26,8 +28,12 @@ class LoadManager:
         """Initialize the load manager."""
         self.config_context = config_context
 
-    def submit_batch(self):
+    def plan_load(self):
         manifest_collection = self.__generate_manifest_collection()
+        planner = LoadPlanner()
+        plan = planner.build_plan(manifest_collection)
+
+        print(plan)
 
     def __generate_manifest_collection(self) -> list[LoadManifest]:
         list_of_feed_ymls = self.config_context.list_of_feed_ymls
@@ -47,6 +53,7 @@ class LoadManager:
                 vacuum_hours=int(feed_meta_raw["vacuum_hours"]),
                 upstream_identifier=feed_meta_raw.get("upstream_identifier") or "",
                 downstream_identifier=feed_meta_raw.get("downstream_identifier") or "",
+                batch_key=feed_meta_raw.get("batch_key") or "",
             )
 
             source_address = Address(

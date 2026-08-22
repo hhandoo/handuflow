@@ -1,0 +1,30 @@
+feed_meta:
+  unique_identifier: "null_batch_key_feed"
+  vacuum_hours: 168
+  batch_key:
+
+load_details:
+  type: "FULL_LOAD"
+
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee_target"
+
+feed_specs:
+  primary_key: "id"
+
+data_quality_checks:
+  - check_group_identifier: "group_null_batch_key"
+    description: "Check with a null batch_key"
+    run_type: "PRE_LOAD"
+    column: "event_ts"
+    checks:
+      - name: "null_check"

@@ -170,6 +170,25 @@ class ValidationErrors:
         message="feed_meta.vacuum_hours is outside the allowed range.",
     )
 
+    FEED_META_BATCH_KEY_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-062",
+        message="feed_meta.batch_key must be a non-blank string when provided.",
+    )
+
+    FEED_META_UPSTREAM_IDENTIFIER_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-063",
+        message=(
+            "feed_meta.upstream_identifier must be a non-blank string when provided."
+        ),
+    )
+
+    FEED_META_DOWNSTREAM_IDENTIFIER_INVALID = ErrorDefinition(
+        code="HF-VALIDATION-064",
+        message=(
+            "feed_meta.downstream_identifier must be a non-blank string when provided."
+        ),
+    )
+
     # ---------------------------------------------------------
     # Load details
     # ---------------------------------------------------------

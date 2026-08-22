@@ -1,0 +1,30 @@
+feed_meta:
+  unique_identifier: "valid_batch_key_feed"
+  vacuum_hours: 168
+  batch_key: "batch_id"
+
+load_details:
+  type: "FULL_LOAD"
+
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee_target"
+
+feed_specs:
+  primary_key: "id"
+
+data_quality_checks:
+  - check_group_identifier: "group_batch_key"
+    description: "Check with a valid batch_key"
+    run_type: "PRE_LOAD"
+    column: "event_ts"
+    checks:
+      - name: "null_check"

@@ -47,3 +47,31 @@ def test_vacuum_hours_out_of_range(
         make_validation_context("vacuum_hours_out_of_range"),
         error_code="HF-VALIDATION-028",
     )
+
+
+def test_invalid_batch_key(
+    enforce_feed_meta: EnforceFeedMeta,
+    make_validation_context: Callable[[str], ConfigurationContext],
+    assert_validation_raises: Callable[..., None],
+) -> None:
+    """Invalid batch_key should fail validation."""
+
+    assert_validation_raises(
+        enforce_feed_meta,
+        make_validation_context("invalid_batch_key"),
+        error_code="HF-VALIDATION-062",
+    )
+
+
+def test_invalid_upstream_identifier(
+    enforce_feed_meta: EnforceFeedMeta,
+    make_validation_context: Callable[[str], ConfigurationContext],
+    assert_validation_raises: Callable[..., None],
+) -> None:
+    """Invalid upstream_identifier should fail validation."""
+
+    assert_validation_raises(
+        enforce_feed_meta,
+        make_validation_context("invalid_upstream_identifier"),
+        error_code="HF-VALIDATION-063",
+    )

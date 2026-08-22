@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from ...configurator.dataclasses.context import ConfigurationContext
+from ...exceptions.definition import ErrorDefinition
 from ...exceptions.errors.validation import ValidationErrors
 from ...storage import StoragePath
 from ...storage.base import StorageProvider
@@ -92,6 +93,30 @@ class EnforceFeedMeta(FeedConfigurationValidation):
             logger,
         )
 
+        self.__validate_optional_string_field(
+            feed_meta,
+            "upstream_identifier",
+            ValidationErrors.FEED_META_UPSTREAM_IDENTIFIER_INVALID,
+            yml_file,
+            logger,
+        )
+
+        self.__validate_optional_string_field(
+            feed_meta,
+            "downstream_identifier",
+            ValidationErrors.FEED_META_DOWNSTREAM_IDENTIFIER_INVALID,
+            yml_file,
+            logger,
+        )
+
+        self.__validate_optional_string_field(
+            feed_meta,
+            "batch_key",
+            ValidationErrors.FEED_META_BATCH_KEY_INVALID,
+            yml_file,
+            logger,
+        )
+
         logger.info(
             "Feed metadata is valid: %s",
             yml_file.uri,
@@ -160,3 +185,30 @@ class EnforceFeedMeta(FeedConfigurationValidation):
             self._raise_validation_error(
                 ValidationErrors.FEED_META_VACUUM_HOURS_OUT_OF_RANGE,
             )
+
+    def __validate_optional_string_field(
+        self,
+        feed_meta: dict[str, Any],
+        field_name: str,
+        error: ErrorDefinition,
+        yml_file: StoragePath,
+        logger: logging.Logger,
+    ) -> None:
+        """Validate an optional feed_meta string field."""
+
+        if field_name not in feed_meta:
+            return
+
+        value = feed_meta.get(field_name)
+
+        if value is None:
+            return
+
+        if not isinstance(value, str) or not value.strip():
+            logger.warning(
+                "feed_meta.%s is invalid: %s",
+                field_name,
+                yml_file.uri,
+            )
+
+            self._raise_validation_error(error)

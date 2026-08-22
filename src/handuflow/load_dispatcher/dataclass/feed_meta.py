@@ -7,5 +7,6 @@ from dataclasses import dataclass
 class FeedMeta:
     unique_identifier: str
     vacuum_hours: int = 168
-    upstream_identifier: str = ""
-    downstream_identifier: str = ""
+    upstream_identifier: str | None = None
+    downstream_identifier: str | None = None
+    batch_key: str | None = None
