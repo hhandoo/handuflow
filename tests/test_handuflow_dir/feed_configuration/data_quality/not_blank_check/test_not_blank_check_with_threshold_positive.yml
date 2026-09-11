@@ -1,7 +1,5 @@
 feed_meta:
   unique_identifier: "employee11"
-  upstream_identifier:
-  downstream_identifier:
   vacuum_hours: 234
 
 load_details:

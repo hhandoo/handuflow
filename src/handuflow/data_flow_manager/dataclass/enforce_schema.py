@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .schema_field import SchemaField
 
 
@@ -9,4 +9,4 @@ class EnforceSchema:
     """Schema enforcement configuration."""
 
     type: str
-    fields: list[SchemaField] = []
+    fields: list[SchemaField] = field(default_factory=lambda: list[SchemaField]())

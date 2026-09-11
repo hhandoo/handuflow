@@ -1,7 +1,7 @@
 feed_meta:
-  unique_identifier: "negative_feed"
+  unique_identifier: "valid_pipeline_feed"
   vacuum_hours: 168
-  batch_key: ""
+  pipeline: "nightly_ingest"
 
 load_details:
   type: "FULL_LOAD"
@@ -20,11 +20,14 @@ target:
 
 feed_specs:
   primary_key: "id"
+  custom_selection:
+    enabled: false
 
 data_quality_checks:
-  - check_group_identifier: "group_1"
-    description: "Null check on event_ts"
+  - check_group_identifier: "group_pipeline"
+    description: "Check with a valid pipeline"
     run_type: "PRE_LOAD"
+    dependency_datasets:
     column: "event_ts"
     checks:
       - name: "null_check"

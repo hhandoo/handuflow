@@ -49,29 +49,29 @@ def test_vacuum_hours_out_of_range(
     )
 
 
-def test_invalid_batch_key(
+def test_invalid_pipeline(
     enforce_feed_meta: EnforceFeedMeta,
     make_validation_context: Callable[[str], ConfigurationContext],
     assert_validation_raises: Callable[..., None],
 ) -> None:
-    """Invalid batch_key should fail validation."""
+    """Invalid pipeline should fail validation."""
 
     assert_validation_raises(
         enforce_feed_meta,
-        make_validation_context("invalid_batch_key"),
+        make_validation_context("invalid_pipeline"),
         error_code="HF-VALIDATION-062",
     )
 
 
-def test_invalid_upstream_identifier(
+def test_invalid_depends_on(
     enforce_feed_meta: EnforceFeedMeta,
     make_validation_context: Callable[[str], ConfigurationContext],
     assert_validation_raises: Callable[..., None],
 ) -> None:
-    """Invalid upstream_identifier should fail validation."""
+    """Invalid depends_on should fail validation."""
 
     assert_validation_raises(
         enforce_feed_meta,
-        make_validation_context("invalid_upstream_identifier"),
+        make_validation_context("invalid_depends_on"),
         error_code="HF-VALIDATION-063",
     )

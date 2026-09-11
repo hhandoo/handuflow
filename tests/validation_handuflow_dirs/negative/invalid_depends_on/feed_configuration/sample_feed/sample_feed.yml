@@ -1,8 +1,8 @@
 feed_meta:
-  unique_identifier: "null_upstream_downstream_feed"
+  unique_identifier: "negative_feed"
   vacuum_hours: 168
-  upstream_identifier:
-  downstream_identifier:
+  depends_on:
+    - ""
 
 load_details:
   type: "FULL_LOAD"
@@ -23,8 +23,8 @@ feed_specs:
   primary_key: "id"
 
 data_quality_checks:
-  - check_group_identifier: "group_null_upstream_downstream"
-    description: "Check with null upstream and downstream identifiers"
+  - check_group_identifier: "group_1"
+    description: "Null check on event_ts"
     run_type: "PRE_LOAD"
     column: "event_ts"
     checks:

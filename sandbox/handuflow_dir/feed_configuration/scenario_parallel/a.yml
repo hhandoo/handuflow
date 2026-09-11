@@ -1,7 +1,9 @@
 feed_meta:
-  unique_identifier: "valid_batch_key_feed"
+  unique_identifier: "a"
+  pipeline: nightly_ingest
+  depends_on:
+    - "c"
   vacuum_hours: 168
-  batch_key: "batch_id"
 
 load_details:
   type: "FULL_LOAD"
@@ -15,15 +17,17 @@ source:
 target:
   type: "hive_metastore"
   format: "delta"
-  schema: "demo"
-  table: "employee_target"
+  schema: "test"
+  table: "parallel_customers"
 
 feed_specs:
   primary_key: "id"
+  custom_selection:
+    enabled: false
 
 data_quality_checks:
-  - check_group_identifier: "group_batch_key"
-    description: "Check with a valid batch_key"
+  - check_group_identifier: "parallel_customers_dq"
+    description: "Pre-load null check for parallel customers raw feed"
     run_type: "PRE_LOAD"
     column: "event_ts"
     checks:

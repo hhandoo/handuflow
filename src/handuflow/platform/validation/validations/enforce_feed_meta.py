@@ -93,26 +93,16 @@ class EnforceFeedMeta(FeedConfigurationValidation):
             logger,
         )
 
-        self.__validate_optional_string_field(
+        self.__validate_depends_on(
             feed_meta,
-            "upstream_identifier",
-            ValidationErrors.FEED_META_UPSTREAM_IDENTIFIER_INVALID,
             yml_file,
             logger,
         )
 
         self.__validate_optional_string_field(
             feed_meta,
-            "downstream_identifier",
-            ValidationErrors.FEED_META_DOWNSTREAM_IDENTIFIER_INVALID,
-            yml_file,
-            logger,
-        )
-
-        self.__validate_optional_string_field(
-            feed_meta,
-            "batch_key",
-            ValidationErrors.FEED_META_BATCH_KEY_INVALID,
+            "pipeline",
+            ValidationErrors.FEED_META_PIPELINE_INVALID,
             yml_file,
             logger,
         )
@@ -185,6 +175,43 @@ class EnforceFeedMeta(FeedConfigurationValidation):
             self._raise_validation_error(
                 ValidationErrors.FEED_META_VACUUM_HOURS_OUT_OF_RANGE,
             )
+
+    def __validate_depends_on(
+        self,
+        feed_meta: dict[str, Any],
+        yml_file: StoragePath,
+        logger: logging.Logger,
+    ) -> None:
+        """Validate optional feed_meta.depends_on."""
+
+        if "depends_on" not in feed_meta:
+            return
+
+        depends_on = feed_meta.get("depends_on")
+
+        if depends_on is None:
+            return
+
+        if not isinstance(depends_on, list):
+            logger.warning(
+                "feed_meta.depends_on is invalid: %s",
+                yml_file.uri,
+            )
+
+            self._raise_validation_error(
+                ValidationErrors.FEED_META_DEPENDS_ON_INVALID,
+            )
+
+        for dependency in depends_on:
+            if not isinstance(dependency, str) or not dependency.strip():
+                logger.warning(
+                    "feed_meta.depends_on contains an invalid dependency: %s",
+                    yml_file.uri,
+                )
+
+                self._raise_validation_error(
+                    ValidationErrors.FEED_META_DEPENDS_ON_INVALID,
+                )
 
     def __validate_optional_string_field(
         self,

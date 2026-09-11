@@ -5,6 +5,7 @@ from ..platform.configurator import SystemConfigurator
 from ..platform.configurator.dataclasses.context import ConfigurationContext
 from ..platform.validation import ValidationResult, ValidationRunner
 from pyspark.sql import SparkSession
+from ..data_flow_manager.load_manager import LoadManager
 
 
 class Orchestrator:
@@ -22,7 +23,7 @@ class Orchestrator:
         config_context.logging.logger.info("Performing system validation...")
         validation_result, all_passed = self.__run_validation(config_context)
 
-        print(validation_result)
+        # print(validation_result)
 
         if all_passed:
             config_context.logging.logger.info(
@@ -33,7 +34,8 @@ class Orchestrator:
             )
 
             for res in pre_load_results_list:
-                print(res)
+                pass
+                # print(res)
 
             config_context.logging.logger.info(
                 f"Thank you for using HanduFLOW [v{__version__}]."
@@ -43,6 +45,10 @@ class Orchestrator:
                 "System validation failed, please check the configuration and try again, "
                 "terminating workflow."
             )
+
+        mmm = LoadManager(config_context=config_context)
+
+        mmm.dispatch_load()
 
     @staticmethod
     def __run_validation(

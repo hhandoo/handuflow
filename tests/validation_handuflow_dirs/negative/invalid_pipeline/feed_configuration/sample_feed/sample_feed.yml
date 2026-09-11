@@ -1,7 +1,7 @@
 feed_meta:
   unique_identifier: "negative_feed"
   vacuum_hours: 168
-  upstream_identifier: ""
+  pipeline: ""
 
 load_details:
   type: "FULL_LOAD"

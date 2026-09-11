@@ -16,9 +16,10 @@ from .dataclass.optimize_command import OptimizeCommand
 from .dataclass.custom_selection import CustomSelection
 from .dataclass.enforce_schema import EnforceSchema
 from .dataclass.schema_field import SchemaField
-
-# from .load_dispatcher import LoadDispatcher
+from .load_dispatcher import LoadDispatcher
 from .load_planner import LoadPlanner
+
+# from .dataclass.plan_result import PlanResult
 
 
 class LoadManager:
@@ -28,12 +29,14 @@ class LoadManager:
         """Initialize the load manager."""
         self.config_context = config_context
 
-    def plan_load(self):
-        manifest_collection = self.__generate_manifest_collection()
-        planner = LoadPlanner()
-        plan = planner.build_plan(manifest_collection)
+    def dispatch_load(self):
+        dispatcher = LoadDispatcher()
 
-        print(plan)
+        planner = LoadPlanner()
+        plan = planner.build_plan(self.__generate_manifest_collection())
+        planner.print_execution_tree(plan)
+        # print(plan)
+        dispatcher.dispatch_plan(plan)
 
     def __generate_manifest_collection(self) -> list[LoadManifest]:
         list_of_feed_ymls = self.config_context.list_of_feed_ymls
@@ -48,12 +51,18 @@ class LoadManager:
             load_details_raw = current_feed_yml_dict["load_details"]
             feed_specs_raw = current_feed_yml_dict["feed_specs"]
 
+            depends_on_raw: Any = feed_meta_raw.get("depends_on")
+            depends_on: list[str] = (
+                [str(dependency) for dependency in cast(list[object], depends_on_raw)]
+                if isinstance(depends_on_raw, list)
+                else []
+            )
+
             feed_meta = FeedMeta(
                 unique_identifier=feed_meta_raw["unique_identifier"],
                 vacuum_hours=int(feed_meta_raw["vacuum_hours"]),
-                upstream_identifier=feed_meta_raw.get("upstream_identifier") or "",
-                downstream_identifier=feed_meta_raw.get("downstream_identifier") or "",
-                batch_key=feed_meta_raw.get("batch_key") or "",
+                depends_on=depends_on,
+                pipeline=feed_meta_raw.get("pipeline"),
             )
 
             source_address = Address(

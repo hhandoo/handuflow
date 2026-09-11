@@ -1,0 +1,33 @@
+feed_meta:
+  unique_identifier: "null_depends_on_feed"
+  vacuum_hours: 168
+  depends_on:
+
+load_details:
+  type: "FULL_LOAD"
+
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee_target"
+
+feed_specs:
+  primary_key: "id"
+  custom_selection:
+    enabled: false
+
+data_quality_checks:
+  - check_group_identifier: "group_null_depends_on"
+    description: "Check with a null depends_on list"
+    run_type: "PRE_LOAD"
+    dependency_datasets:
+    column: "event_ts"
+    checks:
+      - name: "null_check"

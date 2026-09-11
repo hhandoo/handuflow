@@ -1,0 +1,32 @@
+feed_meta:
+  unique_identifier: "c"
+  pipeline: nightly_ingest
+  vacuum_hours: 168
+
+load_details:
+  type: "FULL_LOAD"
+
+source:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "demo"
+  table: "employee"
+
+target:
+  type: "hive_metastore"
+  format: "delta"
+  schema: "test"
+  table: "parallel_products"
+
+feed_specs:
+  primary_key: "id"
+  custom_selection:
+    enabled: false
+
+data_quality_checks:
+  - check_group_identifier: "parallel_products_dq"
+    description: "Pre-load null check for parallel products raw feed"
+    run_type: "PRE_LOAD"
+    column: "event_ts"
+    checks:
+      - name: "null_check"
