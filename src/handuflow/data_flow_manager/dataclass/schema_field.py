@@ -13,4 +13,4 @@ class SchemaField:
     name: str
     type: str
     nullable: bool = True
-    metadata: dict[Any, Any] = field(default_factory=dict)
+    metadata: dict[Any, Any] = field(default_factory=dict[Any, Any])

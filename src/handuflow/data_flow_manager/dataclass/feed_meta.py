@@ -7,5 +7,5 @@ from dataclasses import dataclass, field
 class FeedMeta:
     unique_identifier: str
     vacuum_hours: int = 168
-    depends_on: list[str] = field(default_factory=list)
+    depends_on: list[str] = field(default_factory=lambda: list[str]())
     pipeline: str | None = None

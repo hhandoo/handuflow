@@ -36,7 +36,14 @@ feed_specs:
       - order_date
   custom_selection:
     - enabled: true
-    - sql_file: test.sql
+    - sql_file: |
+        SELECT
+            id,
+            name,
+            salary
+        FROM employee
+        WHERE salary > 50000
+          AND department = 'Engineering';
   enforce_schema:
     type: struct
     fields:

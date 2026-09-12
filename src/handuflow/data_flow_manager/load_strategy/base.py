@@ -1,14 +1,16 @@
 """Base class for HanduFLOW load strategies."""
 
 from __future__ import annotations
-
 from typing import Any
 from abc import ABC, abstractmethod
 from ..dataclass.load_manifest import LoadManifest
+from ..dataclass.transfer_config import TransferConfig
 from ..dataclass.load_result import LoadResult
 from ..dataclass.address import Address
+from ..dataclass.enforce_schema import EnforceSchema
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType
 from ...platform.configurator import ConfigurationContext
 
 
@@ -22,6 +24,46 @@ class LoadStrategy(ABC):
         self.configuration_context = configuration_context
         self.spark_session: SparkSession = configuration_context.spark_config.spark
 
+    def _to_spark_schema_json(self, schema: EnforceSchema) -> dict[str, Any]:
+        """Convert an EnforceSchema to Spark StructType JSON representation."""
+
+        return {
+            "type": schema.type,
+            "fields": [
+                {
+                    "name": field.name,
+                    "type": field.type,
+                    "nullable": field.nullable,
+                    "metadata": field.metadata,
+                }
+                for field in schema.fields
+            ],
+        }
+
+    def _generate_source_data_frame(self) -> DataFrame:
+        """Generate a DataFrame from the source address."""
+        custom_selection = self.load_manifest.feed_specs.custom_selection
+        if custom_selection is None or not custom_selection.enabled:
+            raise ValueError(
+                "Custom selection must be enabled to generate source data."
+            )
+
+        sql_file = custom_selection.sql_file
+        if sql_file is None:
+            raise ValueError("Custom selection SQL file must be configured.")
+
+        elif self.load_manifest.feed_specs.enforce_schema is not None:
+            schema_json = self._to_spark_schema_json(
+                self.load_manifest.feed_specs.enforce_schema
+            )
+            return self.spark_session.read.schema(
+                StructType.fromJson(schema_json)
+            ).table(self.load_manifest.source_address.table_identifier)
+
+        return self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            self.load_manifest.source_address.table_identifier
+        )
+
     def _detect_source_target_change(
         self,
         source_address: Address,
@@ -32,22 +74,20 @@ class LoadStrategy(ABC):
         target_version = self._read_delta_version(target_address)
         return source_version != target_version
 
-    def _perform_preload_activities(
+    def _generate_transfer_config(
         self, source_address: Address, target_address: Address
-    ) -> dict[str, Any]:
+    ) -> TransferConfig:
         """Perform any necessary activities before executing the load."""
-        output: dict[str, Any] = {}
-        output = {
-            "source_data_frame": self._address_to_dataframe(source_address),
-            "target_data_frame": self._address_to_dataframe(target_address),
-            "staging_layer_identifier": self.configuration_context.staging_layer.get_table_identifier(
+        return TransferConfig(
+            source_data_frame=self._generate_source_data_frame(),
+            target_data_frame=self._address_to_dataframe(target_address),
+            staging_layer_identifier=self.configuration_context.staging_layer.get_table_identifier(
                 target_address.schema, target_address.table
             ),
-            "is_source_changed": self._detect_source_target_change(
+            is_source_changed=self._detect_source_target_change(
                 source_address, target_address
             ),
-        }
-        return output
+        )
 
     @abstractmethod
     def execute(self) -> LoadResult:
