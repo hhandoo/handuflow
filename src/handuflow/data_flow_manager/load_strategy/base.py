@@ -5,17 +5,155 @@ from __future__ import annotations
 from typing import Any
 from abc import ABC, abstractmethod
 from ..dataclass.load_manifest import LoadManifest
+from ..dataclass.load_result import LoadResult
+from ..dataclass.address import Address
+from pyspark.sql import DataFrame
+from pyspark.sql import SparkSession
+from ...platform.configurator import ConfigurationContext
 
 
 class LoadStrategy(ABC):
     """Abstract base class for all load strategies."""
 
-    def __detect_source_target_change(self, load_manifest: LoadManifest) -> bool:
+    def __init__(
+        self, load_manifest: LoadManifest, configuration_context: ConfigurationContext
+    ) -> None:
+        self.load_manifest = load_manifest
+        self.configuration_context = configuration_context
+        self.spark_session: SparkSession = configuration_context.spark_config.spark
+
+    def _detect_source_target_change(
+        self,
+        source_address: Address,
+        target_address: Address,
+    ) -> bool:
         """Detect if the source data has changed since the last load."""
-        # Placeholder for actual change detection logic
-        return True
+        source_version = self._read_delta_version(source_address)
+        target_version = self._read_delta_version(target_address)
+        return source_version != target_version
+
+    def _perform_preload_activities(
+        self, source_address: Address, target_address: Address
+    ) -> dict[str, Any]:
+        """Perform any necessary activities before executing the load."""
+        output: dict[str, Any] = {}
+        output = {
+            "source_data_frame": self._address_to_dataframe(source_address),
+            "target_data_frame": self._address_to_dataframe(target_address),
+            "staging_layer_identifier": self.configuration_context.staging_layer.get_table_identifier(
+                target_address.schema, target_address.table
+            ),
+            "is_source_changed": self._detect_source_target_change(
+                source_address, target_address
+            ),
+        }
+        return output
 
     @abstractmethod
-    def execute(self, load_manifest: LoadManifest) -> Any:
-
+    def execute(self) -> LoadResult:
         raise NotImplementedError
+
+    def _enforce_vacuum_on_table(self, table_address: Address):
+        """Enforce the configured Delta vacuum retention on the target dataset."""
+        vacuum_hours = self.load_manifest.feed_meta.vacuum_hours
+        table_identifier = table_address.table_identifier
+        self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            sqlQuery=f"VACUUM {table_identifier} RETAIN {vacuum_hours} HOURS"
+        )
+
+    def _address_to_dataframe(self, table_address: Address) -> DataFrame:
+        """Read source data from a catalog table."""
+        table_identifier = table_address.table_identifier
+        return self.spark_session.read.format(table_address.format).table(
+            table_identifier
+        )
+
+    def _read_delta_version(self, table: Address) -> int:
+        """Read the latest Delta table version from table history."""
+        table_identifier = table.table_identifier
+        history_df = self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            f"DESCRIBE HISTORY {table_identifier}"
+        )
+        latest_version = (
+            history_df.select("version").orderBy("version", ascending=False).first()
+        )
+        if latest_version is None:
+            raise ValueError(f"No Delta history found for table {table_identifier!r}.")
+        return int(latest_version["version"])
+
+    def _optimize_table(self, table: Address) -> None:
+        """Optimize the target Delta table."""
+
+        optimize_command = self.load_manifest.feed_specs.optimize_command
+
+        if optimize_command is None or not optimize_command.enabled:
+            return
+
+        if table.format != "delta":
+            raise ValueError(
+                f"OPTIMIZE is only supported for Delta tables. "
+                f"Got format={table.format!r}."
+            )
+
+        command = f"OPTIMIZE {table.table_identifier}"
+
+        if optimize_command.where:
+            conditions = [
+                f"`{column}` = '{value}'"
+                for condition in optimize_command.where
+                for column, value in condition.items()
+            ]
+
+            command += f" WHERE {' AND '.join(conditions)}"
+
+        if optimize_command.zorder_by:
+            columns = ", ".join(f"`{column}`" for column in optimize_command.zorder_by)
+
+            command += f" ZORDER BY ({columns})"
+
+        self.spark_session.sql(command)  # pyright: ignore[reportUnknownMemberType]
+
+    def _enforce_partitioning(self, table: Address) -> None:
+        """Enforce the configured partitioning on a Delta table."""
+
+        if table.format != "delta":
+            raise ValueError(
+                f"Partitioning is only supported for Delta tables. "
+                f"Got format={table.format}."
+            )
+        requested_partition_columns = self.load_manifest.feed_specs.partition_columns
+        if len(requested_partition_columns) != len(set(requested_partition_columns)):
+            raise ValueError("Partition columns must be unique.")
+        if any(not column.strip() for column in requested_partition_columns):
+            raise ValueError("Partition columns must not contain empty column names.")
+
+        table_identifier = table.table_identifier
+        detail_df = self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            f"DESCRIBE DETAIL {table_identifier}"
+        )
+        detail = detail_df.select("partitionColumns").first()
+        if detail is None:
+            raise ValueError(
+                f"Unable to retrieve table details for {table_identifier}."
+            )
+        current_partition_columns = list(detail["partitionColumns"])
+        # No partitioning change is required.
+        if current_partition_columns == requested_partition_columns:
+            return
+        # Build the PARTITIONED BY clause only when partitioning
+        # has been requested. An empty list means unpartitioned.
+        partition_clause = ""
+        if requested_partition_columns:
+            columns = ", ".join(f"`{column}`" for column in requested_partition_columns)
+            partition_clause = f"PARTITIONED BY ({columns})"
+
+        sql_str = f"""  
+            CREATE OR REPLACE TABLE {table_identifier} 
+            USING DELTA
+            {partition_clause}
+            AS
+            SELECT *
+            FROM {table_identifier}
+            """
+
+        self.spark_session.sql(sql_str)  # pyright: ignore[reportUnknownMemberType]

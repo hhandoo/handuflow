@@ -4,6 +4,7 @@ from ...storage import StorageManager, StoragePath
 from .logging import LoggingConfiguration
 from .default import DefaultConfiguration
 from .spark import SparkConfiguration
+from .staging_layer import StagingLayerConfiguration
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,6 +14,7 @@ class ConfigurationContext:
     run_id: str
     default: DefaultConfiguration
     logging: LoggingConfiguration
+    staging_layer: StagingLayerConfiguration
     storage_path: StoragePath
     storage_manager: StorageManager
     spark_config: SparkConfiguration

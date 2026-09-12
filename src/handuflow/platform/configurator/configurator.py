@@ -20,6 +20,7 @@ from .dataclasses import (
     DefaultConfiguration,
     LoggingConfiguration,
     SparkConfiguration,
+    StagingLayerConfiguration,
 )
 
 from pyspark.sql import SparkSession
@@ -119,9 +120,17 @@ class SystemConfigurator:
             system_name=self._config[DEFAULT_SECTION]["system_name"],
             environment=self._config[DEFAULT_SECTION]["environment"],
         )
+        staging_layer_config = StagingLayerConfiguration(
+            type=self._config["STAGING_LAYER"]["type"],
+            schema=self._config["STAGING_LAYER"]["schema"],
+            table_prefix=self._config["STAGING_LAYER"]["table_prefix"],
+            table_suffix=self._config["STAGING_LAYER"]["table_suffix"],
+            format=self._config["STAGING_LAYER"]["format"],
+        )
         return ConfigurationContext(
             run_id=self._run_id,
             default=default,
+            staging_layer=staging_layer_config,
             logging=self._build_logging_configuration(default.system_name),
             storage_path=self._base_directory,
             storage_manager=self._storage_manager,

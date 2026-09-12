@@ -24,6 +24,14 @@ feed_specs:
   primary_key: "id"
   custom_selection:
     enabled: false
+  optimize_command:
+    enabled: true
+    where:
+      year: 2025
+      month: 7
+    zorder_by:
+      - customer_id
+      - order_date
 
 data_quality_checks:
   - check_group_identifier: "parallel_customers_dq"

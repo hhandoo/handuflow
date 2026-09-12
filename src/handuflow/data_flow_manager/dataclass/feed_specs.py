@@ -13,11 +13,8 @@ class FeedSpecs:
     """Feed-specific loading specifications."""
 
     primary_key: str | None = None
-    composite_key: list[str] = field(default_factory=list)
-    partition_columns: list[str] = field(default_factory=list)
-
+    composite_key: list[str] = field(default_factory=lambda: list[str]())
+    partition_columns: list[str] = field(default_factory=list[str])
     optimize_command: OptimizeCommand | None = None
-
     custom_selection: CustomSelection | None = None
-
     enforce_schema: EnforceSchema | None = None
