@@ -93,6 +93,10 @@ class LoadStrategy(ABC):
     def execute(self) -> LoadResult:
         raise NotImplementedError
 
+    @abstractmethod
+    def _build_staging_layer(self) -> None:
+        raise NotImplementedError
+
     def _enforce_vacuum_on_table(self, table_address: Address):
         """Enforce the configured Delta vacuum retention on the target dataset."""
         vacuum_hours = self.load_manifest.feed_meta.vacuum_hours

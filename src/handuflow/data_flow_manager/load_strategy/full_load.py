@@ -23,9 +23,9 @@ class FullLoadStrategy(LoadStrategy):
             self.load_manifest.source_address, self.load_manifest.target_address
         )
 
-    def __build_staging_layer(self):
-        pass
+    def _build_staging_layer(self):
+        staging_table_name = self.transfer_config.staging_layer_identifier
 
     def execute(self) -> Any:
         """Replace the target with the source dataset."""
-        self.__build_staging_layer()
+        self._build_staging_layer()
