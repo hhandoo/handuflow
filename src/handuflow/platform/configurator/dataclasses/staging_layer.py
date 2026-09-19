@@ -9,6 +9,14 @@ class StagingLayerConfiguration:
     table_suffix: str
     format: str
 
+    @property
+    def get_staging_layer_identifier(self) -> str:
+        """Return the fully qualified staging table identifier."""
+        if self.type == "hive_metastore":
+            return f"`{self.schema}`"
+
+        return f"`{self.type}`.`{self.schema}`"
+
     def get_table_identifier(
         self, current_table_schema: str, current_table_name: str
     ) -> str:

@@ -30,7 +30,7 @@ class LoadManager:
         self.config_context = config_context
 
     def dispatch_load(self):
-        dispatcher = LoadDispatcher()
+        dispatcher = LoadDispatcher(self.config_context)
 
         planner = LoadPlanner()
         plan = planner.build_plan(self.__generate_manifest_collection())

@@ -8,6 +8,7 @@ from .load_strategy import STRATEGIES
 from .dataclass.load_plan import LoadPlan, LoadWave
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from .dataclass.load_manifest import LoadManifest
+from ..platform.configurator import ConfigurationContext
 
 # from .dataclass.plan_result import PlanResult
 # from .dataclass.feed_load_result import FeedLoadResult
@@ -16,9 +17,10 @@ from .dataclass.load_manifest import LoadManifest
 class LoadDispatcher:
     """Dispatches loads to the appropriate load strategy."""
 
-    def __init__(self) -> None:
+    def __init__(self, context: ConfigurationContext) -> None:
         """Initialize the load strategy registry."""
-        self._strategies: dict[str, LoadStrategy] = dict(STRATEGIES)
+        self._strategies: dict[str, type[LoadStrategy]] = dict(STRATEGIES)
+        self._context = context
 
     def dispatch_plan(self, plan: LoadPlan) -> None:
         """Dispatch a load plan wave by wave."""
@@ -81,4 +83,6 @@ class LoadDispatcher:
         print(f"[Wave {wave_index}] " f"Starting feed: {feed_id}")
 
         # Strategy execution will be added here.
-        pass
+        self._strategies[manifest.load_type](
+            load_manifest=manifest, configuration_context=self._context
+        ).execute()

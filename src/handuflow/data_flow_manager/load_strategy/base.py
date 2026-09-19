@@ -12,6 +12,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
 from ...platform.configurator import ConfigurationContext
+from delta.tables import DeltaTable
 
 
 class LoadStrategy(ABC):
@@ -44,8 +45,8 @@ class LoadStrategy(ABC):
         """Generate a DataFrame from the source address."""
         custom_selection = self.load_manifest.feed_specs.custom_selection
         if custom_selection is None or not custom_selection.enabled:
-            raise ValueError(
-                "Custom selection must be enabled to generate source data."
+            return self.spark_session.table(
+                self.load_manifest.source_address.table_identifier
             )
 
         sql_file = custom_selection.sql_file
@@ -60,7 +61,7 @@ class LoadStrategy(ABC):
                 StructType.fromJson(schema_json)
             ).table(self.load_manifest.source_address.table_identifier)
 
-        return self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+        return self.spark_session.table(
             self.load_manifest.source_address.table_identifier
         )
 
@@ -80,7 +81,6 @@ class LoadStrategy(ABC):
         """Perform any necessary activities before executing the load."""
         return TransferConfig(
             source_data_frame=self._generate_source_data_frame(),
-            target_data_frame=self._address_to_dataframe(target_address),
             staging_layer_identifier=self.configuration_context.staging_layer.get_table_identifier(
                 target_address.schema, target_address.table
             ),
@@ -95,7 +95,9 @@ class LoadStrategy(ABC):
 
     @abstractmethod
     def _build_staging_layer(self) -> None:
-        raise NotImplementedError
+        self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            f"CREATE SCHEMA IF NOT EXISTS {self.configuration_context.staging_layer.get_staging_layer_identifier};"
+        )
 
     def _enforce_vacuum_on_table(self, table_address: Address):
         """Enforce the configured Delta vacuum retention on the target dataset."""
@@ -113,17 +115,26 @@ class LoadStrategy(ABC):
         )
 
     def _read_delta_version(self, table: Address) -> int:
-        """Read the latest Delta table version from table history."""
-        table_identifier = table.table_identifier
-        history_df = self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
-            f"DESCRIBE HISTORY {table_identifier}"
-        )
-        latest_version = (
-            history_df.select("version").orderBy("version", ascending=False).first()
-        )
-        if latest_version is None:
-            raise ValueError(f"No Delta history found for table {table_identifier!r}.")
-        return int(latest_version["version"])
+        """Read the latest Delta table version."""
+
+        if table.format.lower() != "delta":
+            return -1
+
+        try:
+            delta_table = DeltaTable.forName(
+                self.spark_session,
+                table.table_identifier,
+            )
+
+            latest_version = delta_table.history(1).select("version").first()
+
+            if latest_version is None:
+                return -1
+
+            return int(latest_version["version"])
+
+        except Exception:
+            return -1
 
     def _optimize_table(self, table: Address) -> None:
         """Optimize the target Delta table."""
