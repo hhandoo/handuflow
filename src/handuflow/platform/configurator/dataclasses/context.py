@@ -4,7 +4,7 @@ from ...storage import StorageManager, StoragePath
 from .logging import LoggingConfiguration
 from .default import DefaultConfiguration
 from .spark import SparkConfiguration
-from .staging_layer import StagingLayerConfiguration
+from ....dataclasses.staging_layer import StagingLayerConfiguration
 
 
 @dataclass(frozen=True, slots=True)

@@ -27,6 +27,8 @@ class FullLoadStrategy(LoadStrategy):
             self.load_manifest.source_address, self.load_manifest.target_address
         )
 
+        self.__load_type = "FULL_LOAD"
+
     def add_staging_metadata(self, df: DataFrame, run_id: str) -> DataFrame:
         """Add HanduFLOW enterprise staging metadata columns to a DataFrame."""
 
@@ -41,11 +43,11 @@ class FullLoadStrategy(LoadStrategy):
                     256,
                 ),
             )
-            .withColumn("__x_load_type", F.lit("FULL_LOAD"))
+            .withColumn("__x_load_type", F.lit(self.__load_type))
             .withColumn("__x_ingestion_date", F.current_timestamp())
         )
 
-    def _build_staging_layer(self):
+    def _build_staging_layer(self) -> str:
         super()._build_staging_layer()
         staging_table_name = self.transfer_config.staging_layer_identifier
         raw_incoming_df = self.transfer_config.source_data_frame
@@ -53,14 +55,33 @@ class FullLoadStrategy(LoadStrategy):
             df=raw_incoming_df, run_id=self.configuration_context.run_id
         )
 
-        self.spark_session.sql(f"DROP TABLE IF EXISTS {staging_table_name};")
-        print(staging_table_name)
-
-        decorated_incoming_df.show(truncate=False)
+        self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            f"DROP TABLE IF EXISTS {staging_table_name};"
+        )
         decorated_incoming_df.write.format("delta").mode("overwrite").saveAsTable(
             staging_table_name
         )
 
+        return staging_table_name
+
     def execute(self) -> Any:
         """Replace the target with the source dataset."""
-        self._build_staging_layer()
+
+        if self.transfer_config.is_source_changed:
+            source_version = self._read_delta_version(self.load_manifest.source_address)
+            incoming_table_name = self._build_staging_layer()
+            target_table = self._target_prep()
+            incoming_df = self.spark_session.table(incoming_table_name)
+
+            incoming_df.write.format("delta").mode("overwrite").saveAsTable(
+                target_table.table_identifier
+            )
+
+            self._set_table_property(
+                target_table, "handuflow.sourceVersion", str(source_version)
+            )
+            self._set_table_property(
+                target_table, "handuflow.loadType", self.__load_type
+            )
+        else:
+            print("The source is unchanged")

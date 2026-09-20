@@ -8,12 +8,10 @@ from .context import ConfigurationContext
 from .logging import LoggingConfiguration
 from .default import DefaultConfiguration
 from .spark import SparkConfiguration
-from .staging_layer import StagingLayerConfiguration
 
 __all__ = [
     "ConfigurationContext",
     "LoggingConfiguration",
     "DefaultConfiguration",
     "SparkConfiguration",
-    "StagingLayerConfiguration",
 ]

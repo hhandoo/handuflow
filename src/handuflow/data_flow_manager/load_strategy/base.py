@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from ..dataclass.load_manifest import LoadManifest
 from ..dataclass.transfer_config import TransferConfig
 from ..dataclass.load_result import LoadResult
-from ..dataclass.address import Address
+from ...dataclasses.address import Address
 from ..dataclass.enforce_schema import EnforceSchema
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
@@ -24,6 +24,51 @@ class LoadStrategy(ABC):
         self.load_manifest = load_manifest
         self.configuration_context = configuration_context
         self.spark_session: SparkSession = configuration_context.spark_config.spark
+
+    def _set_table_property(
+        self,
+        table: Address,
+        key: str,
+        value: str,
+    ) -> bool:
+        """Set a property on a Delta table if it exists."""
+
+        if self._read_delta_version(table) == -1:
+            return False
+
+        self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            f""" 
+            ALTER TABLE {table.table_identifier}
+            SET TBLPROPERTIES (
+                '{key}' = '{value}'
+            )
+            """
+        )  # pyright: ignore[reportUnknownMemberType]
+
+        return True
+
+    def _get_table_property(
+        self,
+        table: Address,
+        key: str,
+    ) -> str | None:
+        """Get a property from a Delta table if it exists."""
+
+        if self._read_delta_version(table) == -1:
+            return None
+
+        properties_df = (
+            self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+                f"SHOW TBLPROPERTIES {table.table_identifier} ('{key}')"
+            )
+        )
+
+        row = properties_df.first()
+
+        if row is None:
+            return None
+
+        return str(row["value"])
 
     def _to_spark_schema_json(self, schema: EnforceSchema) -> dict[str, Any]:
         """Convert an EnforceSchema to Spark StructType JSON representation."""
@@ -72,8 +117,15 @@ class LoadStrategy(ABC):
     ) -> bool:
         """Detect if the source data has changed since the last load."""
         source_version = self._read_delta_version(source_address)
-        target_version = self._read_delta_version(target_address)
-        return source_version != target_version
+
+        target_version = self._get_table_property(
+            target_address, "handuflow.sourceVersion"
+        )
+
+        if target_version is not None:
+            return str(source_version) != target_version
+        else:
+            return True
 
     def _generate_transfer_config(
         self, source_address: Address, target_address: Address
@@ -82,7 +134,8 @@ class LoadStrategy(ABC):
         return TransferConfig(
             source_data_frame=self._generate_source_data_frame(),
             staging_layer_identifier=self.configuration_context.staging_layer.get_table_identifier(
-                target_address.schema, target_address.table
+                target_address.namespace_str,
+                target_address.name,
             ),
             is_source_changed=self._detect_source_target_change(
                 source_address, target_address
@@ -93,10 +146,19 @@ class LoadStrategy(ABC):
     def execute(self) -> LoadResult:
         raise NotImplementedError
 
-    @abstractmethod
-    def _build_staging_layer(self) -> None:
+    def _target_prep(self) -> Address:
+
+        print(self.load_manifest.target_address.namespace_identifier)
         self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
-            f"CREATE SCHEMA IF NOT EXISTS {self.configuration_context.staging_layer.get_staging_layer_identifier};"
+            f"CREATE SCHEMA IF NOT EXISTS {self.load_manifest.target_address.namespace_identifier};"
+        )
+
+        return self.load_manifest.target_address
+
+    @abstractmethod
+    def _build_staging_layer(self) -> str:
+        self.spark_session.sql(  # pyright: ignore[reportUnknownMemberType]
+            f"CREATE SCHEMA IF NOT EXISTS {self.configuration_context.staging_layer.staging_layer_namespace};"
         )
 
     def _enforce_vacuum_on_table(self, table_address: Address):

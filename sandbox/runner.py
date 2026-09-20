@@ -30,16 +30,18 @@ spark = configure_spark_with_delta_pip(builder).getOrCreate()
 
 
 print(spark.conf.get("spark.sql.warehouse.dir"))
-spark.sql("CREATE DATABASE IF NOT EXISTS demo")
-spark.sql("USE demo")
+spark.sql("CREATE DATABASE IF NOT EXISTS `spark_catalog`.`demo`")
+spark.sql("USE `spark_catalog`.`demo`")
+spark.sql("DROP TABLE IF EXISTS `spark_catalog`.`demo`.`employee`")
 spark.sql("""
-CREATE TABLE IF NOT EXISTS employee (
+CREATE TABLE `spark_catalog`.`demo`.`employee` (
     id INT,
     name STRING,
     age INT,
     salary DOUBLE,
     event_ts STRING
 )
+USING DELTA
 """)
 
 
@@ -108,10 +110,30 @@ rows = [
         event_ts=None,  # ❌ null
     ),
 ]
-df = spark.createDataFrame(rows)
+
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    IntegerType,
+    StringType,
+    DoubleType,
+)
+
+schema = StructType(
+    [
+        StructField("id", IntegerType(), True),
+        StructField("name", StringType(), True),
+        StructField("age", IntegerType(), True),
+        StructField("salary", DoubleType(), True),
+        StructField("event_ts", StringType(), True),
+    ]
+)
+df = spark.createDataFrame(rows, schema=schema)
 df.show(truncate=False)
 
-df.write.mode("append").insertInto("demo.employee", overwrite=True)
+df.write.format("delta").mode("overwrite").option(
+    "overwriteSchema", "true"
+).saveAsTable("demo.employee")
 
 
 # my_configurator = SystemConfigurator(r"C:\Users\hando\PycharmProjects\handuflow\sandbox\handuflow_dir", spark)

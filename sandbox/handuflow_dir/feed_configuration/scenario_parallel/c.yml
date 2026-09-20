@@ -7,16 +7,18 @@ load_details:
   type: "FULL_LOAD"
 
 source:
-  type: "hive_metastore"
+  catalog:
+  namespace:
+    - "demo"
+  name: "employee"
   format: "delta"
-  schema: "demo"
-  table: "employee"
 
 target:
-  type: "hive_metastore"
+  catalog:
+  namespace:
+    - "target_test"
+  name: "parallel_products"
   format: "delta"
-  schema: "test"
-  table: "parallel_products"
 
 feed_specs:
   primary_key: "id"

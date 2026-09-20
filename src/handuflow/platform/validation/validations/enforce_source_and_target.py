@@ -13,7 +13,7 @@ from ...storage.base import StorageProvider
 from ..dataclasses import ValidationResult
 from ._common import FeedConfigurationValidation, require_mapping
 
-_REQUIRED_FIELDS = ("type", "format", "schema", "table")
+_REQUIRED_FIELDS = ("catalog", "namespace", "name", "format")
 
 _SECTION_ERRORS: dict[str, tuple[ErrorDefinition, ErrorDefinition]] = {
     "source": (

@@ -10,7 +10,7 @@ from .dataclass.load_manifest import LoadManifest
 from ..platform.configurator import ConfigurationContext
 from ..platform.storage import StoragePath
 from .dataclass.feed_meta import FeedMeta
-from .dataclass.address import Address
+from ..dataclasses.address import Address
 from .dataclass.feed_specs import FeedSpecs
 from .dataclass.optimize_command import OptimizeCommand
 from .dataclass.custom_selection import CustomSelection
@@ -18,8 +18,6 @@ from .dataclass.enforce_schema import EnforceSchema
 from .dataclass.schema_field import SchemaField
 from .load_dispatcher import LoadDispatcher
 from .load_planner import LoadPlanner
-
-# from .dataclass.plan_result import PlanResult
 
 
 class LoadManager:
@@ -35,7 +33,6 @@ class LoadManager:
         planner = LoadPlanner()
         plan = planner.build_plan(self.__generate_manifest_collection())
         planner.print_execution_tree(plan)
-        # print(plan)
         dispatcher.dispatch_plan(plan)
 
     def __generate_manifest_collection(self) -> list[LoadManifest]:
@@ -58,6 +55,8 @@ class LoadManager:
                 else []
             )
 
+            print(source_raw)
+
             feed_meta = FeedMeta(
                 unique_identifier=feed_meta_raw["unique_identifier"],
                 vacuum_hours=int(feed_meta_raw["vacuum_hours"]),
@@ -66,17 +65,17 @@ class LoadManager:
             )
 
             source_address = Address(
-                type=source_raw["type"],
+                catalog=source_raw["catalog"],
+                namespace=tuple(source_raw["namespace"]),
+                name=source_raw["name"],
                 format=source_raw["format"],
-                schema=source_raw["schema"],
-                table=source_raw["table"],
             )
 
             target_address = Address(
-                type=target_raw["type"],
+                catalog=target_raw["catalog"],
+                namespace=tuple(target_raw["namespace"]),
+                name=target_raw["name"],
                 format=target_raw["format"],
-                schema=target_raw["schema"],
-                table=target_raw["table"],
             )
 
             load_manifest_list.append(

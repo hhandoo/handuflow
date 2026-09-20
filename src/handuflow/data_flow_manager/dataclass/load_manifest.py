@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from .feed_specs import FeedSpecs
 from .feed_meta import FeedMeta
-from .address import Address
+from ...dataclasses.address import Address
 
 
 @dataclass(slots=True)
